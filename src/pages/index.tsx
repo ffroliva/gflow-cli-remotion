@@ -69,6 +69,7 @@ const Home: NextPage = () => {
             controls
             autoPlay
             loop
+            acknowledgeRemotionLicense
           />
         </div>
         <RenderControls

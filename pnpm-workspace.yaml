@@ -1,0 +1,38 @@
+allowBuilds:
+  esbuild: true
+  sharp: true
+  unrs-resolver: true
+peerDependencyRules:
+  allowedVersions:
+    eslint: '9'
+minimumReleaseAgeExclude:
+  - '@remotion/bundler@4.0.467'
+  - '@remotion/cli@4.0.467'
+  - '@remotion/compositor-darwin-arm64@4.0.467'
+  - '@remotion/compositor-darwin-x64@4.0.467'
+  - '@remotion/compositor-linux-arm64-gnu@4.0.467'
+  - '@remotion/compositor-linux-arm64-musl@4.0.467'
+  - '@remotion/compositor-linux-x64-gnu@4.0.467'
+  - '@remotion/compositor-linux-x64-musl@4.0.467'
+  - '@remotion/compositor-win32-x64-msvc@4.0.467'
+  - '@remotion/eslint-plugin@4.0.467'
+  - '@remotion/google-fonts@4.0.467'
+  - '@remotion/lambda-client@4.0.467'
+  - '@remotion/lambda@4.0.467'
+  - '@remotion/licensing@4.0.467'
+  - '@remotion/media-parser@4.0.467'
+  - '@remotion/media-utils@4.0.467'
+  - '@remotion/paths@4.0.467'
+  - '@remotion/player@4.0.467'
+  - '@remotion/renderer@4.0.467'
+  - '@remotion/serverless-client@4.0.467'
+  - '@remotion/serverless@4.0.467'
+  - '@remotion/shapes@4.0.467'
+  - '@remotion/streaming@4.0.467'
+  - '@remotion/studio-server@4.0.467'
+  - '@remotion/studio-shared@4.0.467'
+  - '@remotion/studio@4.0.467'
+  - '@remotion/timeline-utils@4.0.467'
+  - '@remotion/web-renderer@4.0.467'
+  - '@remotion/zod-types@4.0.467'
+  - remotion@4.0.467
