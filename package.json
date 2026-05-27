@@ -46,7 +46,7 @@
     "remotion": "remotion studio",
     "render": "remotion render",
     "deploy": "node deploy.mjs",
-    "test": "vitest run --passWithNoTests",
+    "test": "vitest run",
     "test:watch": "vitest",
     "test:contract": "vitest run tests/contract",
     "test:render-smoke": "vitest run tests/render-smoke",
