@@ -6,10 +6,10 @@
     "@remotion/bundler": "4.0.467",
     "@remotion/cli": "4.0.467",
     "@remotion/google-fonts": "4.0.467",
-    "@remotion/lambda": "4.0.467",
     "@remotion/paths": "4.0.467",
     "@remotion/player": "4.0.467",
     "@remotion/shapes": "4.0.467",
+    "obs-websocket-js": "^5.0.6",
     "next": "16.2.3",
     "react": "19.2.3",
     "react-dom": "19.2.3",
@@ -27,12 +27,16 @@
     "@types/web": "0.0.166",
     "@typescript-eslint/eslint-plugin": "8.46.0",
     "@typescript-eslint/parser": "8.46.0",
+    "@vitest/coverage-v8": "^2.1.0",
     "dotenv": "17.3.1",
     "eslint": "9.19.0",
     "eslint-config-next": "16.2.3",
     "prettier": "3.8.1",
+    "tsx": "^4.19.0",
     "typescript": "5.9.3",
-    "typescript-eslint": "8.46.0"
+    "typescript-eslint": "8.46.0",
+    "vitest": "^2.1.0",
+    "zod-to-json-schema": "^3.23.0"
   },
   "scripts": {
     "dev": "next dev",
@@ -41,7 +45,13 @@
     "lint": "eslint .",
     "remotion": "remotion studio",
     "render": "remotion render",
-    "deploy": "node deploy.mjs"
+    "deploy": "node deploy.mjs",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest",
+    "test:contract": "vitest run tests/contract",
+    "test:render-smoke": "vitest run tests/render-smoke",
+    "record-promo": "tsx scripts/record-promo.mjs",
+    "render-matrix": "tsx scripts/render-matrix.mjs"
   },
   "packageManager": "pnpm@11.3.0+sha512.2c403d6594527287672b1f7056343a1f7c3634036a67ffabfcc2b3d7595d843768f8787148d1b57cf7956c90606bbd192857c363af19e96d2d0ec9ec5741d215"
 }
