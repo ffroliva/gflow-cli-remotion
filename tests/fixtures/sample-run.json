@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "runId": "01HZ7K8M3PVQTYK7A4N9XJ5MW2",
+  "startedAtIso": "2026-05-27T14:32:11.123Z",
+  "startedAtMonotonic": 0,
+  "profile": "promo-denon82",
+  "env": {
+    "gflowVersion": "0.9.1",
+    "nodeVersion": "20.11.0",
+    "obsVersion": "30.0.0",
+    "os": "win32-10.0.26200",
+    "browserStrategy": "chrome"
+  },
+  "phases": [
+    {
+      "kind": "t2i",
+      "cmd": "gflow image t2i ...",
+      "startedMs": 0,
+      "endedMs": 60000,
+      "exitCode": 0,
+      "artifacts": ["image-001.png"],
+      "events": []
+    }
+  ],
+  "recording": {
+    "source": "obs",
+    "masterPath": "C:\\Users\\<user-home>\\gflow-output\\promo\\test-001\\master.mp4",
+    "width": 1920,
+    "height": 1080,
+    "fps": 30,
+    "durationMs": 60000
+  }
+}
