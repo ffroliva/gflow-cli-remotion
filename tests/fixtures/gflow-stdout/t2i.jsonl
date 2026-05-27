@@ -1,0 +1,7 @@
+{"ts":"2026-05-27T14:32:11.123Z","event":"ui_automation.entered_editor","level":"info","data":{"profile":"promo-denon82","aspect":"16:9","model":"imagen-4"}}
+{"ts":"2026-05-27T14:32:13.450Z","event":"ui_automation.prompt_filled","level":"info","data":{"prompt_chars":56}}
+{"ts":"2026-05-27T14:32:14.100Z","event":"ui_automation.submit_clicked","level":"info","data":{}}
+{"ts":"2026-05-27T14:32:42.880Z","event":"ui_automation.image_downloaded","level":"info","data":{"path":"C:\\Users\\flavio\\gflow-output\\image-001.png","size_bytes":287433}}
+{"ts":"2026-05-27T14:32:42.890Z","event":"ui_automation.exit","level":"info","data":{"exit_code":0,"duration_ms":31767}}
+{"ts":"2026-05-27T14:32:42.895Z","event":"random_internal_debug","level":"debug","data":{"should_be_filtered":true}}
+{"ts":"2026-05-27T14:32:42.900Z","event":"error_raised","level":"error","data":{"msg":"trace from foo@bar.com path=C:\\Users\\flavio\\.config"}}

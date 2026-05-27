@@ -64,10 +64,13 @@ vitest.config.ts                 NEW
 
 **Cross-repo touches** (in `gflow-cli/`):
 
-```
-tests/fixtures/run-manifest.schema.json     copy of Remotion-side JSON Schema
-tests/contracts/test_run_manifest_schema.py contract test (pytest)
-```
+> **Amendment (2026-05-28):** Originally this section listed a Python-side
+> contract test mirroring the JSON Schema fixture. That cross-repo contract
+> was dropped by operator decision — see Task 1.4 amendment below. The
+> single-sided snapshot in `gflow-cli-remotion/tests/contract/` is the
+> authoritative contract.
+
+(none — gflow-cli is untouched by this plan)
 
 ---
 
@@ -359,7 +362,16 @@ git add tests/contract/schema-snapshot.test.ts tests/fixtures/run-manifest.schem
 git commit -m "feat(contract): commit JSON Schema fixture + snapshot test"
 ```
 
-### Task 1.4: Cross-repo fixture in gflow-cli
+### Task 1.4: ~~Cross-repo fixture in gflow-cli~~ — DROPPED (2026-05-28)
+
+> **Amendment (2026-05-28):** Dropped permanently by operator. Rationale:
+> gflow-cli stays untouched by the promo pipeline; the gflow-cli-remotion-side
+> `tests/contract/schema-snapshot.test.ts` (Task 1.3) is the sole contract.
+> If the schema drifts in `types/schema.ts` without regenerating the fixture,
+> the snapshot test will fail there — sufficient enforcement without a
+> second-language mirror. Steps below kept for historical reference.
+
+
 
 **Files:**
 - Create: `../gflow-cli/tests/fixtures/run-manifest.schema.json`
