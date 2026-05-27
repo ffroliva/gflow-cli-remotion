@@ -1,0 +1,187 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "number",
+      "const": 1
+    },
+    "runId": {
+      "type": "string"
+    },
+    "startedAtIso": {
+      "type": "string"
+    },
+    "startedAtMonotonic": {
+      "type": "number"
+    },
+    "profile": {
+      "type": "string"
+    },
+    "env": {
+      "type": "object",
+      "properties": {
+        "gflowVersion": {
+          "type": "string"
+        },
+        "nodeVersion": {
+          "type": "string"
+        },
+        "obsVersion": {
+          "type": "string"
+        },
+        "os": {
+          "type": "string"
+        },
+        "browserStrategy": {
+          "type": "string",
+          "const": "chrome"
+        }
+      },
+      "required": [
+        "gflowVersion",
+        "nodeVersion",
+        "obsVersion",
+        "os",
+        "browserStrategy"
+      ],
+      "additionalProperties": false
+    },
+    "phases": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "t2i",
+              "batch",
+              "video",
+              "data"
+            ]
+          },
+          "cmd": {
+            "type": "string"
+          },
+          "startedMs": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "endedMs": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "exitCode": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "artifacts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "events": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "ts": {
+                  "type": "string"
+                },
+                "event": {
+                  "type": "string"
+                },
+                "level": {
+                  "type": "string"
+                },
+                "data": {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {}
+                }
+              },
+              "required": [
+                "ts",
+                "event",
+                "level",
+                "data"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "kind",
+          "cmd",
+          "startedMs",
+          "endedMs",
+          "exitCode",
+          "artifacts",
+          "events"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "recording": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "type": "string",
+          "const": "obs"
+        },
+        "masterPath": {
+          "type": "string"
+        },
+        "width": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "height": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "fps": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "durationMs": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "source",
+        "masterPath",
+        "width",
+        "height",
+        "fps",
+        "durationMs"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "runId",
+    "startedAtIso",
+    "startedAtMonotonic",
+    "profile",
+    "env",
+    "phases",
+    "recording"
+  ],
+  "additionalProperties": false
+}

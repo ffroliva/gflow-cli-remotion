@@ -100,7 +100,6 @@ tests/contracts/test_run_manifest_schema.py contract test (pytest)
 +    "@vitest/coverage-v8": "^2.1.0",
 +    "tsx": "^4.19.0",
 +    "vitest": "^2.1.0",
-+    "zod-to-json-schema": "^3.23.0",
      ...
    },
    "scripts": {
@@ -122,7 +121,7 @@ tests/contracts/test_run_manifest_schema.py contract test (pytest)
 
 ```bash
 git add package.json pnpm-lock.yaml
-git commit -m "chore(deps): add vitest/zod-to-json-schema/obs-websocket-js, remove @remotion/lambda"
+git commit -m "chore(deps): add vitest/obs-websocket-js, remove @remotion/lambda"
 ```
 
 ### Task 0.2: tsconfig + vitest config
@@ -325,14 +324,14 @@ git commit -m "feat(types): RunManifest Zod schema with strict validation"
 
 ```ts
 import { describe, it, expect } from "vitest";
-import { zodToJsonSchema } from "zod-to-json-schema";
+import { z } from "zod";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { RunManifest } from "../../types/schema";
 
 describe("schema-snapshot contract", () => {
-  it("Zod-to-JSON-Schema matches committed fixture", () => {
-    const generated = zodToJsonSchema(RunManifest, "RunManifest");
+  it("z.toJSONSchema matches committed fixture", () => {
+    const generated = z.toJSONSchema(RunManifest);
     const committed = JSON.parse(
       readFileSync(join(__dirname, "../fixtures/run-manifest.schema.json"), "utf-8")
     );
@@ -341,12 +340,14 @@ describe("schema-snapshot contract", () => {
 });
 ```
 
+> **Amendment (2026-05-28):** Original plan used `zod-to-json-schema@^3.23.0`, which silently emits an empty `{ $ref, definitions: { RunManifest: {} } }` on a Zod 4 schema (the 3.x library targets Zod 3's internal API). Switched to Zod 4's built-in `z.toJSONSchema()`. Dep removed from `package.json`.
+
 - [ ] **Step 2: Run — verify FAIL**: fixture file missing.
 
 - [ ] **Step 3: Generate fixture** — one-shot Node snippet:
 
 ```pwsh
-node -e "const {zodToJsonSchema} = require('zod-to-json-schema'); const {RunManifest} = require('./types/schema'); const fs = require('fs'); fs.writeFileSync('tests/fixtures/run-manifest.schema.json', JSON.stringify(zodToJsonSchema(RunManifest, 'RunManifest'), null, 2) + '\n');"
+pnpm tsx -e "import { z } from 'zod'; import { RunManifest } from './types/schema'; import { writeFileSync } from 'node:fs'; writeFileSync('tests/fixtures/run-manifest.schema.json', JSON.stringify(z.toJSONSchema(RunManifest), null, 2) + '\n');"
 ```
 
 - [ ] **Step 4: Run — verify PASS**: `pnpm test:contract` → 1/1 pass.
