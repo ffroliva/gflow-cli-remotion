@@ -87,15 +87,20 @@ export const PromoSocial: React.FC<Props> = ({
       </Sequence>
       {showVideo ? (
         <Sequence from={HOOK_DURATION}>
-          <AbsoluteFill style={{ backgroundColor: "black" }}>
-            {/* 16:9 master centred + scaled to fill the 9:16 safe area. */}
-            <AbsoluteFill
-              style={{ alignItems: "center", justifyContent: "center" }}
-            >
-              <div style={{ width: "100%", transform: "scale(2.1)" }}>
-                <OffthreadVideo src={staticFile("master.mp4")} />
-              </div>
-            </AbsoluteFill>
+          {/* 16:9 master shown full-width, letterboxed on black in the 9:16
+              frame. A CSS scale-to-cover blows up the layer enough to crash
+              the render tab, so we letterbox instead. */}
+          <AbsoluteFill
+            style={{
+              backgroundColor: "black",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <OffthreadVideo
+              src={staticFile("master.mp4")}
+              style={{ width: "100%", height: "auto" }}
+            />
           </AbsoluteFill>
         </Sequence>
       ) : null}
