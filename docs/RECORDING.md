@@ -69,6 +69,35 @@ one-time OBS setup in [SETUP.md](SETUP.md) (websocket password + a scene that
 composites the terminal pane + the Chrome window). Preferred once OBS is
 configured, because the scene framing/cropping is reusable.
 
+## Database isolation (avoids the exit-16 schema-drift trap)
+
+**Problem.** gflow opens its SQLite catalog and applies pending migrations
+*before* any Flow call. If the catalog DB was written by a **newer** gflow
+(e.g. an under-development branch at schema 2) than the `gflow` binary on PATH
+(e.g. released v0.9.1 at schema 1), the older binary refuses to touch it and
+exits **16** with `DataMigrationError: database schema N is newer than
+installed schema M`. No credits are spent — but it kills a recording before it
+starts. (Full mechanics: gflow-cli `docs/DATA_LAYER.md`; reaction guide:
+gflow-cli `docs/KNOWN_ISSUES.md`.)
+
+**Alternatives considered.**
+1. *Upgrade gflow* so the binary matches the DB schema — fixes it until the
+   next drift; relies on the operator keeping versions in sync.
+2. *Preflight version/schema check* in `record-promo` — fails fast with a clear
+   message but still requires a fix before recording.
+3. *Separate per-run DB* — the promo never touches the main catalog. **Chosen.**
+
+**What we do.** `record-promo` injects `GFLOW_CLI_DB_PATH=<run-dir>/catalog.db`
+into the gflow child process. A fresh per-run DB always matches whatever gflow
+binary runs, so drift can never fail a recording, and the operator's real
+catalog is never polluted by throwaway promo generations. `scrubEnv` strips any
+inherited `GFLOW_CLI_DB_PATH` first, so this is deterministic regardless of the
+operator's environment.
+
+> If you run gflow manually for a capture (outside `record-promo`), pass the
+> same override yourself:
+> `GFLOW_CLI_DB_PATH=<somewhere>/promo.db gflow image t2i "…" --profile <p>`.
+
 ## The terminal half is rendered, not screen-grabbed
 
 The terminal portion of the promo is produced by the **`Terminal` Remotion

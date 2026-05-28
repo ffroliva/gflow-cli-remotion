@@ -120,6 +120,14 @@ verifyChromeProfile(profileDir);
 const outRoot = resolveOutRoot(runId);
 mkdirSync(outRoot, { recursive: true });
 
+// Promo recordings use a SEPARATE per-run catalog DB, never the operator's
+// main gflow.db. A fresh DB always matches whatever gflow binary is on PATH,
+// so a schema drift between an installed release and a newer dev build cannot
+// fail the recording with exit 16 (DataMigrationError) — and the operator's
+// real catalog is never polluted by throwaway promo generations.
+// See docs/RECORDING.md § "Database isolation".
+const promoDbPath = join(outRoot, "catalog.db");
+
 const obs: ObsAdapter = dryRun ? new FakeObsAdapter() : new RealObsAdapter();
 const masterPath = join(outRoot, "master.mp4");
 
@@ -158,7 +166,9 @@ for (const phase of PHASES) {
   const eventLines: string[] = [];
 
   const child = spawn(cmdToRun, argsToRun, {
-    env: scrubEnv(process.env),
+    // scrubEnv strips any inherited GFLOW_CLI_DB_PATH; we re-inject the
+    // dedicated promo DB so gflow always writes to the isolated catalog.
+    env: { ...scrubEnv(process.env), GFLOW_CLI_DB_PATH: promoDbPath },
     stdio: ["ignore", "pipe", "inherit"],
     shell: dryRun, // .cmd needs cmd.exe to dispatch on Windows
   });
