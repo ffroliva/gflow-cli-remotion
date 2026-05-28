@@ -42,48 +42,52 @@ session. `auto`/`internal` use Playwright's Chromium, which Google rejects.
 
 ## Capturing the screen
 
-### Verified: ffmpeg gdigrab (no OBS needed)
+### OBS via `record-promo` (the capture method)
 
-`ffmpeg`'s `gdigrab` captures the live desktop from this environment (probed
-2026-05-28: non-black frame, YAVG ≈ 52; a clean run produced a 48s tail-free
-1920×1200 master). **Run the whole sequence synchronously in one shell** so the
-stop runs in the same session as the recorder:
+`scripts/record-promo.mts` drives OBS over its websocket: it builds a clean
+capture scene, starts recording, spawns the gflow generation phases, stops, and
+writes a Zod `run.json` beside `master.mp4`.
+
+**Why OBS, not a desktop grab.** OBS captures a single *window* — only the Flow
+Chrome window's pixels, even when it is occluded or unfocused. The rest of the
+desktop, the taskbar, and any other windows you have open never enter the frame.
+`prepareBrowserScene` (in `src/orchestrator/obs.ts`) sets this up automatically
+on every run:
+
+- creates/selects a `promo-browser` scene with one `window_capture` source using
+  **Windows Graphics Capture** (the method that captures GPU-accelerated Chrome;
+  BitBlt renders Chrome black);
+- **resolves the live Flow window at record time** — matches `chrome.exe` plus a
+  title containing `Flow` (see `src/orchestrator/window-match.ts`). A browser
+  title drifts as the page changes, so a frozen window string goes stale and OBS
+  records black; resolving live avoids that;
+- sets the master canvas to 1920×1080 and fits the window into it;
+- optional crop to strip the browser chrome / the "unsupported flag" banner.
+
+If no matching window is open, `record-promo` aborts rather than capture the
+wrong window.
+
+**Operator prerequisites:**
+1. OBS running with **obs-websocket enabled** (Tools → WebSocket Server Settings;
+   default port 4455). One-time details in [SETUP.md](SETUP.md).
+2. Export the websocket password, ensure a live gflow session + the Flow Chrome
+   window is open, then record:
 
 ```bash
-OUT=~/gflow-output/promo/<run-id>; mkdir -p "$OUT"
-# 1. start recording to .mkv (truncation-safe) in the background
-ffmpeg -y -f gdigrab -framerate 30 -i desktop -pix_fmt yuv420p "$OUT/capture.mkv" &
-sleep 2
-# 2. run a real generation — opens the visible gflow Chrome (ui_automation).
-#    Isolated DB avoids the exit-16 schema-drift trap (see below).
-GFLOW_CLI_DB_PATH="$OUT/catalog.db" \
-  gflow image t2i "a serene mountain lake at dawn, cinematic" \
-  --aspect 16:9 --profile denon82 --out "$OUT"
-# 3. STOP: taskkill works in-session; a SIGINT/`kill` from a detached
-#    (nohup'd) git-bash script does NOT stop Windows ffmpeg → runaway
-#    recording. So never background this whole sequence.
-taskkill //F //IM ffmpeg.exe
-# 4. remux the crash-safe .mkv to a finalized .mp4
-ffmpeg -y -i "$OUT/capture.mkv" -c copy "$OUT/master.mp4"
+export OBS_WS_PASSWORD='<your obs websocket password>'
+pnpm record-promo --profile promo-<name> --run-id $(date +%Y-%m-%d)-001
 ```
 
-**Pitfall (learned 2026-05-28):** backgrounding the orchestration with `nohup`
-left the recorder unkillable (SIGINT ignored by Windows ffmpeg, cross-session
-`taskkill` unreliable) and it recorded 3.5 min of idle desktop. Foreground +
-`taskkill` = a clean ~48s master.
+### Deprecated: full-desktop `ffmpeg gdigrab` — DO NOT USE
 
-Capture a single window instead of the whole desktop with
-`-i title=<window title>` (e.g. the Chrome/Flow window). Trim precisely later
-using the `prompt_submitted` → `batch_response_captured` timestamps in gflow's
-JSONL.
-
-### Alternative: OBS via `record-promo`
-
-`scripts/record-promo.mts` drives OBS over websocket (start record → spawn gflow
-phases → stop) and writes a Zod `run.json` beside `master.mp4`. Requires the
-one-time OBS setup in [SETUP.md](SETUP.md) (websocket password + a scene that
-composites the terminal pane + the Chrome window). Preferred once OBS is
-configured, because the scene framing/cropping is reusable.
+An earlier approach recorded the whole desktop with
+`ffmpeg -f gdigrab -i desktop`. **This is what produced the polluted masters**
+(confirmed by frame inspection 2026-05-28): grabbing every pixel on screen
+captured concurrent dev work, the Windows taskbar, the browser chrome, and the
+OS locale — not a usable promo asset. Use the OBS window-capture path above.
+(A `gdigrab` of a *single* window via `-i title=<window>` avoids the desktop
+leak but is still fragile — title drift, no occlusion handling, manual stop —
+versus OBS window-capture.)
 
 ## Database isolation (avoids the exit-16 schema-drift trap)
 

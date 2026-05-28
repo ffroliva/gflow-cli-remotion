@@ -136,6 +136,17 @@ const t0 = hrtime.bigint();
 const nowMs = () => Number((hrtime.bigint() - t0) / 1_000_000n);
 
 await obs.connect();
+// Configure a clean window-capture scene bound to the live Flow Chrome window
+// before recording. This is the fix for full-desktop/polluted masters: OBS
+// captures only the Flow window's pixels, never the whole screen.
+await obs.prepareBrowserScene({
+  sceneName: "promo-browser",
+  sourceName: "flow-capture",
+  exe: "chrome.exe",
+  titleIncludes: "Flow",
+  width: 1920,
+  height: 1080,
+});
 await obs.startRecording(masterPath);
 
 const phaseRecords: Array<{
