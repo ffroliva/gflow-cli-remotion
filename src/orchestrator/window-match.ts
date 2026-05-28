@@ -28,9 +28,15 @@ export function parseWindowValue(value: string): ParsedWindow {
 export interface PickWindowOptions {
   /** Executable name to match, e.g. "chrome.exe" (case-insensitive). */
   exe: string;
-  /** Stable substring the window title must contain, e.g. "Flow"
-   *  (case-insensitive). Omit to accept any window of the given exe. */
+  /** Stable whole-word the window title must contain, e.g. "Flow"
+   *  (case-insensitive, word-boundary). Omit to accept any window of the given
+   *  exe. Word-boundary matters: a naive substring match for "Flow" also hits
+   *  "gflow-cli" (the CLI's own GitHub/IDE tabs) and binds the wrong window. */
   titleIncludes?: string;
+}
+
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 /**
@@ -52,10 +58,8 @@ export function pickWindow(
   if (sameExe.length === 0) return null;
 
   if (opts.titleIncludes) {
-    const needle = opts.titleIncludes.toLowerCase();
-    const titled = sameExe.find((v) =>
-      parseWindowValue(v).title.toLowerCase().includes(needle),
-    );
+    const re = new RegExp(`\\b${escapeRegExp(opts.titleIncludes)}\\b`, "i");
+    const titled = sameExe.find((v) => re.test(parseWindowValue(v).title));
     return titled ?? null;
   }
   return sameExe[0] ?? null;

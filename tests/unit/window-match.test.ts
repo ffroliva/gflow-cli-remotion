@@ -22,23 +22,31 @@ describe("parseWindowValue()", () => {
 });
 
 describe("pickWindow()", () => {
+  const FLOW = "Flow - May 28 - Google Chrome:Chrome_WidgetWin_1:chrome.exe";
+  // Decoy: the CLI's own GitHub tab — title contains the substring "flow"
+  // (inside "gflow-cli") but NOT the whole word "Flow".
+  const GFLOW_DECOY =
+    "Issues · ffroliva/gflow-cli - Google Chrome:Chrome_WidgetWin_1:chrome.exe";
   const live = [
     "gflow-showcase-terminal:ConsoleWindowClass:powershell.exe",
-    "Flow - May 28 - Google Chrome:Chrome_WidgetWin_1:chrome.exe",
+    GFLOW_DECOY,
+    FLOW,
     "Google AI Studio - Google Chrome:Chrome_WidgetWin_1:chrome.exe",
     "Search bar:Chrome_WidgetWin_1:msedge.exe",
   ];
 
   it("finds the Flow chrome window among several windows", () => {
-    expect(pickWindow(live, { exe: "chrome.exe", titleIncludes: "Flow" })).toBe(
-      "Flow - May 28 - Google Chrome:Chrome_WidgetWin_1:chrome.exe",
-    );
+    expect(pickWindow(live, { exe: "chrome.exe", titleIncludes: "Flow" })).toBe(FLOW);
+  });
+
+  it("does NOT match 'gflow-cli' for title 'Flow' (word boundary, not substring)", () => {
+    const picked = pickWindow(live, { exe: "chrome.exe", titleIncludes: "Flow" });
+    expect(picked).not.toBe(GFLOW_DECOY);
+    expect(picked).toBe(FLOW);
   });
 
   it("matches exe case-insensitively", () => {
-    expect(pickWindow(live, { exe: "CHROME.EXE", titleIncludes: "Flow" })).toBe(
-      "Flow - May 28 - Google Chrome:Chrome_WidgetWin_1:chrome.exe",
-    );
+    expect(pickWindow(live, { exe: "CHROME.EXE", titleIncludes: "Flow" })).toBe(FLOW);
   });
 
   it("returns null when no window runs the requested exe", () => {
@@ -52,8 +60,6 @@ describe("pickWindow()", () => {
   });
 
   it("returns the first same-exe window when no titleIncludes is given", () => {
-    expect(pickWindow(live, { exe: "chrome.exe" })).toBe(
-      "Flow - May 28 - Google Chrome:Chrome_WidgetWin_1:chrome.exe",
-    );
+    expect(pickWindow(live, { exe: "chrome.exe" })).toBe(GFLOW_DECOY);
   });
 });
