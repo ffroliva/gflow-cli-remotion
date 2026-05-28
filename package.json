@@ -2,6 +2,9 @@
   "name": "gflow-cli-remotion",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=22"
+  },
   "dependencies": {
     "@remotion/bundler": "4.0.467",
     "@remotion/cli": "4.0.467",
