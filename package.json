@@ -9,11 +9,12 @@
     "@remotion/paths": "4.0.467",
     "@remotion/player": "4.0.467",
     "@remotion/shapes": "4.0.467",
-    "obs-websocket-js": "5.0.8",
     "next": "16.2.3",
+    "obs-websocket-js": "5.0.8",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "remotion": "4.0.467",
+    "ulid": "^3.0.2",
     "zod": "4.3.6"
   },
   "devDependencies": {
@@ -49,8 +50,8 @@
     "test:watch": "vitest",
     "test:contract": "vitest run tests/contract",
     "test:render-smoke": "vitest run tests/render-smoke",
-    "record-promo": "tsx scripts/record-promo.mjs",
-    "render-matrix": "tsx scripts/render-matrix.mjs"
+    "record-promo": "tsx scripts/record-promo.mts",
+    "render-matrix": "tsx scripts/render-matrix.mts"
   },
   "packageManager": "pnpm@11.3.0+sha512.2c403d6594527287672b1f7056343a1f7c3634036a67ffabfcc2b3d7595d843768f8787148d1b57cf7956c90606bbd192857c363af19e96d2d0ec9ec5741d215"
 }

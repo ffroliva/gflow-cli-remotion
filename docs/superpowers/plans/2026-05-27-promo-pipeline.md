@@ -992,10 +992,24 @@ export function writeManifest(runDir: string, manifest: RunManifestT, opts: { fo
 
 - [ ] **Step 3: Pass, commit**.
 
-### Task 5.7: record-promo.mjs
+### Task 5.7: record-promo.mts
+
+> **Amendment (2026-05-28):** Two corrections from execution:
+> 1. **Filename `.mjs` → `.mts`** — Node 22 strictly treats `.mjs` as ESM
+>    JavaScript and rejects TypeScript syntax (`type`-only imports, generics,
+>    `as` casts) at parse time, before tsx can transform. `.mts` is
+>    TypeScript ESM source; tsx handles it natively and the
+>    `pnpm record-promo` script in `package.json` was updated to match.
+> 2. **Profile prefix not stripped** — the original snippet built the
+>    profile dir as `profile_${profile.replace(/^promo-/, "")}`, but the
+>    actual gflow-cli `auth.profile_dir()` uses the **full** profile name,
+>    including the `promo-` prefix: `profile_promo-test`, not
+>    `profile_test`. Stripping would point at the wrong directory and the
+>    chrome-marker check would correctly fail — but with a confusing
+>    "marker missing" instead of "wrong profile prefix".
 
 **Files:**
-- Create: `scripts/record-promo.mjs`
+- Create: `scripts/record-promo.mts`
 
 - [ ] **Step 1: Implement** (the entrypoint — wire everything together):
 
@@ -1037,7 +1051,7 @@ mkdirSync(outDir, { recursive: true });
 
 const profileDir = join(
   process.env.LOCALAPPDATA ?? process.env.HOME!,
-  "ffroliva", "gflow-cli", `profile_${profile.replace(/^promo-/, "")}`,
+  "ffroliva", "gflow-cli", `profile_${profile}`, // full name; do NOT strip prefix
 );
 verifyChromeProfile(profileDir);
 
