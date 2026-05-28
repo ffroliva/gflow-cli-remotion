@@ -3,6 +3,11 @@ import { PromoMaster, promoMasterSchema } from "./promo/PromoMaster";
 import { PromoSocial, promoSocialSchema } from "./promo/PromoSocial";
 import { ReadmeLoop, readmeLoopSchema } from "./promo/ReadmeLoop";
 import {
+  Terminal,
+  terminalSchema,
+  terminalDuration,
+} from "./promo/Terminal";
+import {
   FPS,
   MASTER,
   SOCIAL,
@@ -54,6 +59,16 @@ export const RemotionRoot: React.FC = () => {
         height={README_LOOP.height}
         schema={readmeLoopSchema}
         defaultProps={{ runDir: "", caption: undefined }}
+      />
+      <Composition
+        id="Terminal"
+        component={Terminal}
+        durationInFrames={terminalDuration()}
+        fps={FPS}
+        width={MASTER.width}
+        height={MASTER.height}
+        schema={terminalSchema}
+        defaultProps={{ rowFrames: 13 }}
       />
     </>
   );
