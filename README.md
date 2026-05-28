@@ -4,7 +4,7 @@
 
 [![CI](https://github.com/ffroliva/gflow-cli-remotion/actions/workflows/ci.yml/badge.svg)](https://github.com/ffroliva/gflow-cli-remotion/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Node](https://img.shields.io/badge/node-%3E%3D20-339933.svg)](https://nodejs.org)
+[![Node](https://img.shields.io/badge/node-%3E%3D22-339933.svg)](https://nodejs.org)
 [![Remotion](https://img.shields.io/badge/Remotion-4.x-0b84f3.svg)](https://remotion.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178c6.svg)](https://www.typescriptlang.org)
 [![Code style: Prettier](https://img.shields.io/badge/code%20style-prettier-ff69b4.svg)](https://prettier.io)
@@ -91,7 +91,7 @@ Alpha. The orchestrator, render matrix, and three compositions are built and tes
 
 ## Tech stack
 
-Node 20+ · TypeScript · Remotion 4.x · React 19 · Zod · Vitest · obs-websocket-js · ffmpeg + gifski.
+Node 22+ · TypeScript · Remotion 4.x · React 19 · Zod · Vitest · obs-websocket-js · ffmpeg + gifski.
 
 ## License
 
