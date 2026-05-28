@@ -45,21 +45,37 @@ session. `auto`/`internal` use Playwright's Chromium, which Google rejects.
 ### Verified: ffmpeg gdigrab (no OBS needed)
 
 `ffmpeg`'s `gdigrab` captures the live desktop from this environment (probed
-2026-05-28: non-black frame, YAVG ≈ 52). Record while running a real gflow
-generation:
+2026-05-28: non-black frame, YAVG ≈ 52; a clean run produced a 48s tail-free
+1920×1200 master). **Run the whole sequence synchronously in one shell** so the
+stop runs in the same session as the recorder:
 
 ```bash
-# 1. start the screen recording (whole desktop)
-ffmpeg -y -f gdigrab -framerate 30 -i desktop -pix_fmt yuv420p master-raw.mp4 &
-
-# 2. run a real generation — opens the visible gflow Chrome + prints to terminal
-gflow image t2i "a quiet mountain lake at dawn, cinematic" --aspect 16:9 --profile denon82
-
-# 3. stop ffmpeg (q / kill) → master-raw.mp4 holds terminal + browser
+OUT=~/gflow-output/promo/<run-id>; mkdir -p "$OUT"
+# 1. start recording to .mkv (truncation-safe) in the background
+ffmpeg -y -f gdigrab -framerate 30 -i desktop -pix_fmt yuv420p "$OUT/capture.mkv" &
+sleep 2
+# 2. run a real generation — opens the visible gflow Chrome (ui_automation).
+#    Isolated DB avoids the exit-16 schema-drift trap (see below).
+GFLOW_CLI_DB_PATH="$OUT/catalog.db" \
+  gflow image t2i "a serene mountain lake at dawn, cinematic" \
+  --aspect 16:9 --profile denon82 --out "$OUT"
+# 3. STOP: taskkill works in-session; a SIGINT/`kill` from a detached
+#    (nohup'd) git-bash script does NOT stop Windows ffmpeg → runaway
+#    recording. So never background this whole sequence.
+taskkill //F //IM ffmpeg.exe
+# 4. remux the crash-safe .mkv to a finalized .mp4
+ffmpeg -y -i "$OUT/capture.mkv" -c copy "$OUT/master.mp4"
 ```
 
+**Pitfall (learned 2026-05-28):** backgrounding the orchestration with `nohup`
+left the recorder unkillable (SIGINT ignored by Windows ffmpeg, cross-session
+`taskkill` unreliable) and it recorded 3.5 min of idle desktop. Foreground +
+`taskkill` = a clean ~48s master.
+
 Capture a single window instead of the whole desktop with
-`-i title=<window title>` (e.g. the Chrome/Flow window, or the terminal).
+`-i title=<window title>` (e.g. the Chrome/Flow window). Trim precisely later
+using the `prompt_submitted` → `batch_response_captured` timestamps in gflow's
+JSONL.
 
 ### Alternative: OBS via `record-promo`
 
