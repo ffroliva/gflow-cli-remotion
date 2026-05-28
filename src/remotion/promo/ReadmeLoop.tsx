@@ -1,4 +1,11 @@
-import { AbsoluteFill, Sequence, Video, useCurrentFrame, useVideoConfig } from "remotion";
+import {
+  AbsoluteFill,
+  Sequence,
+  Video,
+  staticFile,
+  useCurrentFrame,
+  useVideoConfig,
+} from "remotion";
 import { z } from "zod";
 import { theme, cursorOpacity } from "./theme";
 
@@ -36,16 +43,17 @@ const Intro: React.FC<{ caption: string }> = ({ caption }) => {
 };
 
 export const ReadmeLoop: React.FC<Props> = ({ runDir, caption }) => {
-  const masterUrl = runDir ? `file://${runDir}/master.mp4` : null;
+  // Served from the per-render publicDir via staticFile (see PromoMaster note).
+  const showVideo = Boolean(runDir);
   return (
     <AbsoluteFill style={{ backgroundColor: theme.bg }}>
       <Sequence durationInFrames={INTRO_FRAMES}>
         <Intro caption={caption ?? "gflow image t2i \"a quiet mountain lake\""} />
       </Sequence>
-      {masterUrl ? (
+      {showVideo ? (
         <Sequence from={INTRO_FRAMES}>
           <AbsoluteFill style={{ backgroundColor: "black" }}>
-            <Video src={masterUrl} />
+            <Video src={staticFile("master.mp4")} />
           </AbsoluteFill>
         </Sequence>
       ) : null}

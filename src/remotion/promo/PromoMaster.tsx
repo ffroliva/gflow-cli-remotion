@@ -4,6 +4,7 @@ import {
   Video,
   interpolate,
   spring,
+  staticFile,
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
@@ -86,7 +87,10 @@ export const PromoMaster: React.FC<Props> = ({
   hookTitle,
   hookSubtitle,
 }) => {
-  const masterUrl = runDir ? `file://${runDir}/master.mp4` : null;
+  // The master recording is served from the per-render publicDir (set by
+  // render-matrix to the run dir) via staticFile. file:// URLs are rejected
+  // by Chromium's URL safety check on the localhost-served render page.
+  const showVideo = Boolean(runDir);
   return (
     <AbsoluteFill style={{ backgroundColor: theme.bg }}>
       <Sequence durationInFrames={HOOK_DURATION}>
@@ -95,10 +99,10 @@ export const PromoMaster: React.FC<Props> = ({
           subtitle={hookSubtitle ?? "Veo + Imagen, one command at a time."}
         />
       </Sequence>
-      {masterUrl ? (
+      {showVideo ? (
         <Sequence from={HOOK_DURATION}>
           <AbsoluteFill style={{ backgroundColor: "black" }}>
-            <Video src={masterUrl} />
+            <Video src={staticFile("master.mp4")} />
             <CommandBadge label="gflow image t2i …" />
           </AbsoluteFill>
         </Sequence>

@@ -4,6 +4,7 @@ import {
   Video,
   interpolate,
   spring,
+  staticFile,
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
@@ -74,7 +75,8 @@ export const PromoSocial: React.FC<Props> = ({
   hookTitle,
   hookSubtitle,
 }) => {
-  const masterUrl = runDir ? `file://${runDir}/master.mp4` : null;
+  // Served from the per-render publicDir via staticFile (see PromoMaster note).
+  const showVideo = Boolean(runDir);
   return (
     <AbsoluteFill style={{ backgroundColor: theme.bg }}>
       <Sequence durationInFrames={HOOK_DURATION}>
@@ -83,7 +85,7 @@ export const PromoSocial: React.FC<Props> = ({
           subtitle={hookSubtitle ?? "Watch."}
         />
       </Sequence>
-      {masterUrl ? (
+      {showVideo ? (
         <Sequence from={HOOK_DURATION}>
           <AbsoluteFill style={{ backgroundColor: "black" }}>
             {/* 16:9 master centred + scaled to fill the 9:16 safe area. */}
@@ -91,7 +93,7 @@ export const PromoSocial: React.FC<Props> = ({
               style={{ alignItems: "center", justifyContent: "center" }}
             >
               <div style={{ width: "100%", transform: "scale(2.1)" }}>
-                <Video src={masterUrl} />
+                <Video src={staticFile("master.mp4")} />
               </div>
             </AbsoluteFill>
           </AbsoluteFill>

@@ -58,8 +58,12 @@ if (wanted.length === 0) {
   process.exit(2);
 }
 
+// Serve the run dir as the bundle's public dir so staticFile("master.mp4")
+// resolves to the recording over http (file:// is blocked by Chromium, and
+// publicDir is a bundle-time option — not available on the render calls).
 const serveUrl = await bundle({
   entryPoint: join(process.cwd(), "src", "remotion", "index.ts"),
+  publicDir: runDir,
 });
 
 let count = 0;
