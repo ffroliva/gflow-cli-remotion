@@ -30,6 +30,7 @@ import { parseEventStream } from "../src/orchestrator/event-stream";
 import { verifyChromeProfile } from "../src/orchestrator/profile-check";
 import { writeManifest } from "../src/orchestrator/manifest";
 import { PHASES } from "../src/orchestrator/phases";
+import { resolveOutRoot } from "../src/orchestrator/run-paths";
 import { RunManifest } from "../types/schema";
 
 interface CliValues {
@@ -116,10 +117,7 @@ function resolveProfileDir(profileName: string): string {
 const profileDir = resolveProfileDir(profile);
 verifyChromeProfile(profileDir);
 
-const outRoot =
-  process.platform === "win32"
-    ? join(process.env.USERPROFILE ?? "", "gflow-output", "promo", runId)
-    : join(process.env.HOME ?? "", "gflow-output", "promo", runId);
+const outRoot = resolveOutRoot(runId);
 mkdirSync(outRoot, { recursive: true });
 
 const obs: ObsAdapter = dryRun ? new FakeObsAdapter() : new RealObsAdapter();
