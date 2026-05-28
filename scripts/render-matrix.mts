@@ -97,6 +97,10 @@ for (const id of wanted) {
       ...(frameRange ? { frameRange } : {}),
       chromiumOptions: { gl: "swiftshader" },
       timeoutInMilliseconds: 120_000,
+      // Serialize frames: software (swiftshader) rendering of OffthreadVideo
+      // overwhelms the frame compositor under the default multi-tab
+      // concurrency, causing "No frame found"/"Target closed" crashes.
+      concurrency: 1,
     });
     count += 1;
   }
