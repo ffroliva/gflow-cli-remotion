@@ -1,0 +1,6 @@
+{"ts":"2026-05-27T14:33:00.000Z","event":"image_batch.started","level":"info","data":{"profile":"promo-denon82","count":3}}
+{"ts":"2026-05-27T14:33:12.500Z","event":"ui_automation.entered_editor","level":"info","data":{"slot":1}}
+{"ts":"2026-05-27T14:33:45.800Z","event":"ui_automation.image_downloaded","level":"info","data":{"path":"<user-home>\\gflow-output\\batch-1.png"}}
+{"ts":"2026-05-27T14:34:15.200Z","event":"ui_automation.image_downloaded","level":"info","data":{"path":"<user-home>\\gflow-output\\batch-2.png"}}
+{"ts":"2026-05-27T14:34:42.900Z","event":"ui_automation.image_downloaded","level":"info","data":{"path":"<user-home>\\gflow-output\\batch-3.png"}}
+{"ts":"2026-05-27T14:34:43.100Z","event":"image_batch.complete","level":"info","data":{"succeeded":3,"failed":0}}

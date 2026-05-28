@@ -82,8 +82,16 @@ const runId = values["run-id"] ?? ulid();
  *   Linux:   ~/.local/share/gflow-cli/
  * Profile dirs sit underneath as `profile_<full-name>` — the full operator-
  * supplied name (including the `promo-` prefix). Do NOT strip the prefix.
+ *
+ * Override hook: `GFLOW_PROFILE_ROOT` lets integration tests point the
+ * orchestrator at a hermetic tmp dir without requiring the operator's real
+ * profile layout. Consumed only by record-promo.mts; never passed to child
+ * processes (scrubEnv drops it because it isn't allow-listed).
  */
 function resolveProfileRoot(): string {
+  if (process.env.GFLOW_PROFILE_ROOT) {
+    return process.env.GFLOW_PROFILE_ROOT;
+  }
   if (process.platform === "win32") {
     const base = process.env.LOCALAPPDATA;
     if (!base) {

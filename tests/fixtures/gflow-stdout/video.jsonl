@@ -1,0 +1,5 @@
+{"ts":"2026-05-27T14:35:00.000Z","event":"ui_automation_video.entered_editor","level":"info","data":{"profile":"promo-denon82","model":"veo3"}}
+{"ts":"2026-05-27T14:35:08.300Z","event":"ui_automation_video.prompt_filled","level":"info","data":{"prompt_chars":56}}
+{"ts":"2026-05-27T14:35:10.000Z","event":"ui_automation_video.submit_clicked","level":"info","data":{}}
+{"ts":"2026-05-27T14:39:42.880Z","event":"ui_automation_video.video_downloaded","level":"info","data":{"path":"<user-home>\\gflow-output\\video-001.mp4","size_bytes":12483920,"duration_s":8}}
+{"ts":"2026-05-27T14:39:43.000Z","event":"ui_automation_video.exit","level":"info","data":{"exit_code":0,"duration_ms":283000}}
