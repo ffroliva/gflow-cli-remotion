@@ -1,37 +1,59 @@
 import { Composition } from "remotion";
+import { PromoMaster, promoMasterSchema } from "./promo/PromoMaster";
+import { PromoSocial, promoSocialSchema } from "./promo/PromoSocial";
+import { ReadmeLoop, readmeLoopSchema } from "./promo/ReadmeLoop";
 import {
-  COMP_NAME,
-  defaultMyCompProps,
-  DURATION_IN_FRAMES,
-  VIDEO_FPS,
-  VIDEO_HEIGHT,
-  VIDEO_WIDTH,
+  FPS,
+  MASTER,
+  SOCIAL,
+  README_LOOP,
+  MASTER_DURATION,
+  SOCIAL_DURATION,
+  README_DURATION,
 } from "../../types/constants";
-import { Main } from "./MyComp/Main";
-import { NextLogo } from "./MyComp/NextLogo";
 
 export const RemotionRoot: React.FC = () => {
   return (
     <>
       <Composition
-        id={COMP_NAME}
-        component={Main}
-        durationInFrames={DURATION_IN_FRAMES}
-        fps={VIDEO_FPS}
-        width={VIDEO_WIDTH}
-        height={VIDEO_HEIGHT}
-        defaultProps={defaultMyCompProps}
+        id="PromoMaster"
+        component={PromoMaster}
+        durationInFrames={MASTER_DURATION}
+        fps={FPS}
+        width={MASTER.width}
+        height={MASTER.height}
+        schema={promoMasterSchema}
+        defaultProps={{
+          runDir: "",
+          hookId: undefined,
+          hookTitle: undefined,
+          hookSubtitle: undefined,
+        }}
       />
       <Composition
-        id="NextLogo"
-        component={NextLogo}
-        durationInFrames={300}
-        fps={30}
-        width={140}
-        height={140}
+        id="PromoSocial"
+        component={PromoSocial}
+        durationInFrames={SOCIAL_DURATION}
+        fps={FPS}
+        width={SOCIAL.width}
+        height={SOCIAL.height}
+        schema={promoSocialSchema}
         defaultProps={{
-          outProgress: 0,
+          runDir: "",
+          hookId: "pov",
+          hookTitle: undefined,
+          hookSubtitle: undefined,
         }}
+      />
+      <Composition
+        id="ReadmeLoop"
+        component={ReadmeLoop}
+        durationInFrames={README_DURATION}
+        fps={FPS}
+        width={README_LOOP.width}
+        height={README_LOOP.height}
+        schema={readmeLoopSchema}
+        defaultProps={{ runDir: "", caption: undefined }}
       />
     </>
   );

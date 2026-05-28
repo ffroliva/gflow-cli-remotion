@@ -60,6 +60,9 @@ importers:
       '@remotion/eslint-plugin':
         specifier: 4.0.467
         version: 4.0.467(eslint@9.19.0)(typescript@5.9.3)
+      '@remotion/renderer':
+        specifier: 4.0.467
+        version: 4.0.467(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@types/node':
         specifier: 20.12.14
         version: 20.12.14

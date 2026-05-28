@@ -31,8 +31,10 @@ const FORBIDDEN: ReadonlyArray<RegExp> = [
   /^GH_TOKEN/,
 ];
 
-export function scrubEnv(src: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
-  const out: NodeJS.ProcessEnv = {};
+export function scrubEnv(
+  src: Record<string, string | undefined>,
+): Record<string, string | undefined> {
+  const out: Record<string, string | undefined> = {};
   for (const [k, v] of Object.entries(src)) {
     if (v === undefined) continue;
     if (FORBIDDEN.some((re) => re.test(k))) continue;

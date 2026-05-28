@@ -2,86 +2,123 @@ import { Player } from "@remotion/player";
 import type { NextPage } from "next";
 import Head from "next/head";
 import React, { useMemo, useState } from "react";
-import { z } from "zod";
+import { PromoMaster } from "../remotion/promo/PromoMaster";
+import { PromoSocial } from "../remotion/promo/PromoSocial";
+import { ReadmeLoop } from "../remotion/promo/ReadmeLoop";
+import { hooks } from "../../types/hooks";
 import {
-  CompositionProps,
-  defaultMyCompProps,
-  DURATION_IN_FRAMES,
-  VIDEO_FPS,
-  VIDEO_HEIGHT,
-  VIDEO_WIDTH,
+  FPS,
+  MASTER,
+  SOCIAL,
+  README_LOOP,
+  MASTER_DURATION,
+  SOCIAL_DURATION,
+  README_DURATION,
 } from "../../types/constants";
-import { RenderControls } from "../components/RenderControls";
-import { Spacing } from "../components/Spacing";
-import { Tips } from "../components/Tips/Tips";
-import { Main } from "../remotion/MyComp/Main";
 
-const container: React.CSSProperties = {
-  maxWidth: 768,
-  margin: "auto",
-  marginBottom: 20,
-  paddingLeft: 16,
-  paddingRight: 16,
-};
+type CompId = "PromoMaster" | "PromoSocial" | "ReadmeLoop";
 
-const outer: React.CSSProperties = {
-  borderRadius: "var(--geist-border-radius)",
-  overflow: "hidden",
-  boxShadow: "0 0 200px rgba(0, 0, 0, 0.15)",
-  marginBottom: 40,
-  marginTop: 60,
-};
+const COMPS = {
+  PromoMaster: {
+    component: PromoMaster,
+    durationInFrames: MASTER_DURATION,
+    ...MASTER,
+  },
+  PromoSocial: {
+    component: PromoSocial,
+    durationInFrames: SOCIAL_DURATION,
+    ...SOCIAL,
+  },
+  ReadmeLoop: {
+    component: ReadmeLoop,
+    durationInFrames: README_DURATION,
+    ...README_LOOP,
+  },
+} as const;
 
-const player: React.CSSProperties = {
-  width: "100%",
+const page: React.CSSProperties = {
+  minHeight: "100vh",
+  background: "#0a0e14",
+  color: "#e6e6e6",
+  fontFamily: "monospace",
+  padding: 32,
 };
 
 const Home: NextPage = () => {
-  const [text, setText] = useState<string>(defaultMyCompProps.title);
+  const [comp, setComp] = useState<CompId>("PromoSocial");
+  const [hookId, setHookId] = useState<string>(hooks[0]!.id);
 
-  const inputProps: z.infer<typeof CompositionProps> = useMemo(() => {
-    return {
-      title: text,
-    };
-  }, [text]);
+  const hook = useMemo(
+    () => hooks.find((h) => h.id === hookId) ?? hooks[0]!,
+    [hookId],
+  );
+
+  const selected = COMPS[comp];
+  const inputProps = useMemo(
+    () => ({
+      runDir: "",
+      hookId: hook.id,
+      hookTitle: hook.title,
+      hookSubtitle: hook.subtitle,
+      caption: undefined as string | undefined,
+    }),
+    [hook],
+  );
 
   return (
-    <div>
+    <div style={page}>
       <Head>
-        <title>Remotion and Next.js</title>
-        <meta name="description" content="Remotion and Next.js" />
-        <meta
-          name="viewport"
-          content="width=device-width, initial-scale=1, maximum-scale=1"
-        />
-        <link rel="icon" href="/favicon.ico" />
+        <title>gflow promo — preview</title>
+        <meta name="description" content="gflow promo composition preview" />
       </Head>
-      <div style={container}>
-        <div className="cinematics" style={outer}>
-          <Player
-            component={Main}
-            inputProps={inputProps}
-            durationInFrames={DURATION_IN_FRAMES}
-            fps={VIDEO_FPS}
-            compositionHeight={VIDEO_HEIGHT}
-            compositionWidth={VIDEO_WIDTH}
-            style={player}
-            controls
-            autoPlay
-            loop
-            acknowledgeRemotionLicense
-          />
-        </div>
-        <RenderControls
-          text={text}
-          setText={setText}
+      <h1 style={{ color: "#00e5a0" }}>gflow promo preview</h1>
+      <p style={{ color: "#5c6773" }}>
+        Local preview only — the master recording (file://) does not load in a
+        browser. Use <code>pnpm remotion studio</code> for full playback against
+        a real run dir.
+      </p>
+
+      <div style={{ display: "flex", gap: 16, margin: "24px 0" }}>
+        <label>
+          composition{" "}
+          <select
+            value={comp}
+            onChange={(e) => setComp(e.target.value as CompId)}
+          >
+            {Object.keys(COMPS).map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          hook{" "}
+          <select value={hookId} onChange={(e) => setHookId(e.target.value)}>
+            {hooks.map((h) => (
+              <option key={h.id} value={h.id}>
+                {h.id}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+
+      <div style={{ maxWidth: 520 }}>
+        <Player
+          // key forces a clean remount when dimensions change between comps
+          key={comp}
+          component={selected.component}
           inputProps={inputProps}
-        ></RenderControls>
-        <Spacing></Spacing>
-        <Spacing></Spacing>
-        <Spacing></Spacing>
-        <Spacing></Spacing>
-        <Tips></Tips>
+          durationInFrames={selected.durationInFrames}
+          fps={FPS}
+          compositionWidth={selected.width}
+          compositionHeight={selected.height}
+          style={{ width: "100%" }}
+          controls
+          loop
+          acknowledgeRemotionLicense
+        />
       </div>
     </div>
   );
