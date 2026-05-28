@@ -12,18 +12,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Node must be set up BEFORE pnpm/action-setup: pnpm 11.3 self-installs
-      # via Node and requires >=22.13, which the runner's default Node doesn't
-      # satisfy. pnpm version itself comes from package.json "packageManager".
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
 
-      - uses: pnpm/action-setup@v4
+      # Use Corepack (bundled with Node 22) instead of pnpm/action-setup —
+      # that action self-installs pnpm under its own Node 20 runtime, which
+      # trips pnpm 11.3's engines.node>=22.13 check under engine-strict.
+      # Corepack runs pnpm on the Node 22 set up above; version comes from
+      # package.json "packageManager".
+      - name: Enable pnpm via Corepack
+        run: corepack enable
 
-      # Re-run setup-node now that pnpm exists, to enable the pnpm store cache.
-      - name: Enable pnpm cache
+      - name: Re-resolve Node with pnpm store cache
         uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
