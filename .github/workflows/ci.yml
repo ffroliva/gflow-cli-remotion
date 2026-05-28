@@ -12,10 +12,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Version comes from the "packageManager" field in package.json.
+      # Node must be set up BEFORE pnpm/action-setup: pnpm 11.3 self-installs
+      # via Node and requires >=22.13, which the runner's default Node doesn't
+      # satisfy. pnpm version itself comes from package.json "packageManager".
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
       - uses: pnpm/action-setup@v4
 
-      - uses: actions/setup-node@v4
+      # Re-run setup-node now that pnpm exists, to enable the pnpm store cache.
+      - name: Enable pnpm cache
+        uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
           cache: pnpm
