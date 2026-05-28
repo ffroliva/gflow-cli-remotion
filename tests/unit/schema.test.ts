@@ -9,7 +9,8 @@ describe("RunManifest schema", () => {
     expect(parsed.phases).toHaveLength(1);
   });
   it("rejects missing required field", () => {
-    const { schemaVersion: _drop, ...bad } = sample;
+    const bad: Record<string, unknown> = { ...sample };
+    delete bad.schemaVersion;
     expect(() => RunManifest.parse(bad)).toThrow();
   });
   it("rejects unknown top-level extra key", () => {

@@ -28,7 +28,7 @@ describe("writeManifest()", () => {
     writeManifest(dir, parsed);
     const bytes = readFileSync(join(dir, "run.json"), "utf-8");
     expect(bytes.endsWith("\n")).toBe(true);
-    expect(bytes).toMatch(/\n  "schemaVersion"/); // 2-space indent
+    expect(bytes).toMatch(/\n {2}"schemaVersion"/); // 2-space indent
   });
 
   it("refuses to overwrite an existing run.json without force", () => {
