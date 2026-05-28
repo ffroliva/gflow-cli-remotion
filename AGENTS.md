@@ -39,6 +39,56 @@ pnpm test:ci           # unit + integration + contract + lint tests
 - Integration tests spawn real `tsx scripts/record-promo.mts` subprocesses against the fake-gflow stubs — they exercise the same path live recordings take.
 - TDD: write the failing test first for orchestrator/parser/schema logic. Compositions are verified by the render-smoke + manual Studio review.
 
+## Remotion skill
+
+When writing or modifying any Remotion composition, **load the Remotion skill first**:
+
+- **Skill file:** [`skills/remotion/SKILL.md`](skills/remotion/SKILL.md) — core Remotion best practices (animation, sequences, assets, compositions, rendering).
+- **Supplementary rules** in [`skills/remotion/rules/`](skills/remotion/rules/) — load on demand based on the task:
+
+| Task | Rule file |
+|------|-----------|
+| Captions / subtitles | `rules/subtitles.md` |
+| Display captions | `rules/display-captions.md` |
+| Import SRT captions | `rules/import-srt-captions.md` |
+| Transcribe captions | `rules/transcribe-captions.md` |
+| FFmpeg operations | `rules/ffmpeg.md` |
+| Silence detection | `rules/silence-detection.md` |
+| Audio visualization | `rules/audio-visualization.md` |
+| Sound effects | `rules/sfx.md` |
+| 3D (Three.js / R3F) | `rules/3d.md` |
+| Advanced audio | `rules/audio.md` |
+| Dynamic metadata | `rules/calculate-metadata.md` |
+| Composition nesting/stills | `rules/compositions.md` |
+| Google Fonts | `rules/google-fonts.md` |
+| Local fonts | `rules/local-fonts.md` |
+| Audio duration | `rules/get-audio-duration.md` |
+| Video dimensions | `rules/get-video-dimensions.md` |
+| Video duration | `rules/get-video-duration.md` |
+| GIFs | `rules/gifs.md` |
+| Images (sizing, dynamic) | `rules/images.md` |
+| Light leaks | `rules/light-leaks.md` |
+| Lottie animations | `rules/lottie.md` |
+| HTML in canvas | `rules/html-in-canvas.md` |
+| Measuring DOM nodes | `rules/measuring-dom-nodes.md` |
+| Measuring text | `rules/measuring-text.md` |
+| Advanced sequencing | `rules/sequencing.md` |
+| TailwindCSS | `rules/tailwind.md` |
+| Text animations | `rules/text-animations.md` |
+| Advanced timing | `rules/timing.md` |
+| Transitions | `rules/transitions.md` |
+| Transparent video | `rules/transparent-videos.md` |
+| Trimming | `rules/trimming.md` |
+| Advanced videos | `rules/videos.md` |
+| Parameterized compositions | `rules/parameters.md` |
+| Maps | `rules/maplibre.md` |
+| Voiceover (ElevenLabs) | `rules/voiceover.md` |
+
+Key invariants enforced by the skill — never violate these:
+- **No CSS transitions or animations** — they do not render correctly; use `interpolate()` + `useCurrentFrame()`.
+- **No Tailwind animation classes** — same reason.
+- Assets go in `public/`; reference them via `staticFile()`.
+
 ## Code style
 
 - Prettier-formatted, eslint-clean, `tsc --noEmit` clean. Strict TypeScript.
