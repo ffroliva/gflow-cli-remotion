@@ -1,7 +1,7 @@
 import {
   AbsoluteFill,
   Sequence,
-  Video,
+  OffthreadVideo,
   staticFile,
   useCurrentFrame,
   useVideoConfig,
@@ -53,7 +53,7 @@ export const ReadmeLoop: React.FC<Props> = ({ runDir, caption }) => {
       {showVideo ? (
         <Sequence from={INTRO_FRAMES}>
           <AbsoluteFill style={{ backgroundColor: "black" }}>
-            <Video src={staticFile("master.mp4")} />
+            <OffthreadVideo src={staticFile("master.mp4")} />
           </AbsoluteFill>
         </Sequence>
       ) : null}

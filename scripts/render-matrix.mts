@@ -96,6 +96,7 @@ for (const id of wanted) {
       inputProps: v.inputProps,
       ...(frameRange ? { frameRange } : {}),
       chromiumOptions: { gl: "swiftshader" },
+      timeoutInMilliseconds: 120_000,
     });
     count += 1;
   }

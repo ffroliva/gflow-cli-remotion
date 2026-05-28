@@ -1,7 +1,7 @@
 import {
   AbsoluteFill,
   Sequence,
-  Video,
+  OffthreadVideo,
   interpolate,
   spring,
   staticFile,
@@ -102,7 +102,7 @@ export const PromoMaster: React.FC<Props> = ({
       {showVideo ? (
         <Sequence from={HOOK_DURATION}>
           <AbsoluteFill style={{ backgroundColor: "black" }}>
-            <Video src={staticFile("master.mp4")} />
+            <OffthreadVideo src={staticFile("master.mp4")} />
             <CommandBadge label="gflow image t2i …" />
           </AbsoluteFill>
         </Sequence>

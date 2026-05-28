@@ -1,7 +1,7 @@
 import {
   AbsoluteFill,
   Sequence,
-  Video,
+  OffthreadVideo,
   interpolate,
   spring,
   staticFile,
@@ -93,7 +93,7 @@ export const PromoSocial: React.FC<Props> = ({
               style={{ alignItems: "center", justifyContent: "center" }}
             >
               <div style={{ width: "100%", transform: "scale(2.1)" }}>
-                <Video src={staticFile("master.mp4")} />
+                <OffthreadVideo src={staticFile("master.mp4")} />
               </div>
             </AbsoluteFill>
           </AbsoluteFill>
