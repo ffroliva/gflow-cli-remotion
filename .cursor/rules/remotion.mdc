@@ -1,0 +1,15 @@
+---
+description: Remotion best practices — auto-attached to all composition files
+globs: src/remotion/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+Load and follow the Remotion skill when editing compositions:
+
+- **Core skill:** [`skills/remotion/SKILL.md`](../../skills/remotion/SKILL.md)
+- **Supplementary rules:** [`skills/remotion/rules/`](../../skills/remotion/rules/) — pick the rule file that matches your task (see the table in `AGENTS.md`).
+
+Key invariants — never violate:
+- No CSS transitions or animations — use `interpolate()` + `useCurrentFrame()`.
+- No Tailwind animation classes.
+- Assets go in `public/`; reference via `staticFile()`.
