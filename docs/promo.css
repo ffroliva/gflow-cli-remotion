@@ -1,0 +1,17 @@
+/*
+ * Chrome user-stylesheet for promo recordings.
+ *
+ * Belt-and-braces alongside the OBS Crop/Pad filter: hides the Google
+ * account chip + any element exposing an email handle, so a stray frame
+ * never leaks the operator's identity even if the crop is mis-positioned.
+ *
+ * Load via a Chrome extension like "User CSS" / "Stylus" on the promo
+ * profile, or inject through the recording profile's preferences.
+ */
+
+[aria-label*="Google Account" i],
+[data-tooltip*="@"],
+img[alt*="@"],
+a[aria-label*="@"] {
+  visibility: hidden !important;
+}
