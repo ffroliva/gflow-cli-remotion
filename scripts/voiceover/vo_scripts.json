@@ -1,0 +1,20 @@
+{
+  "rate": "-5%",
+  "variants": [
+    {
+      "id": "explainer",
+      "voice": "en-US-EmmaNeural",
+      "text": "gflow drives Google Flow right from your terminal. Type a prompt, and Imagen and Veo generate it. Images, video, whole batches. No clicking through menus, no copy-paste. Your creative pipeline, fully scriptable."
+    },
+    {
+      "id": "benefit",
+      "voice": "en-US-AndrewNeural",
+      "text": "Stop clicking through menus. With gflow, one command turns a prompt into finished images and video, generated, downloaded, and catalogued locally. The creative tool you love, now part of your workflow."
+    },
+    {
+      "id": "developer-direct",
+      "voice": "en-US-BrianNeural",
+      "text": "You live in the terminal, so should your AI video. gflow wraps Google Flow in a real CLI. Prompt in, MP4 out. Scriptable, repeatable, yours. pip install gflow-cli, and go."
+    }
+  ]
+}

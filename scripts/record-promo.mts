@@ -13,8 +13,9 @@
  *   pnpm record-promo --profile promo-test --dry-run
  */
 
+import "dotenv/config"; // load OBS_WS_PASSWORD (+ any local vars) from .env
 import { spawn } from "node:child_process";
-import { mkdirSync, readdirSync } from "node:fs";
+import { copyFileSync, mkdirSync, readdirSync, statSync } from "node:fs";
 import { hrtime } from "node:process";
 import { join } from "node:path";
 import { parseArgs } from "node:util";
@@ -29,7 +30,7 @@ import { scrubEnv } from "../src/orchestrator/env-scrub";
 import { parseEventStream } from "../src/orchestrator/event-stream";
 import { verifyChromeProfile } from "../src/orchestrator/profile-check";
 import { writeManifest } from "../src/orchestrator/manifest";
-import { PHASES } from "../src/orchestrator/phases";
+import { PHASES, PIPELINE_PHASES } from "../src/orchestrator/phases";
 import { resolveOutRoot } from "../src/orchestrator/run-paths";
 import { RunManifest } from "../types/schema";
 
@@ -39,6 +40,7 @@ interface CliValues {
   prompt: string;
   "dry-run": boolean;
   force: boolean;
+  pipeline: boolean;
 }
 
 const { values: rawValues } = parseArgs({
@@ -51,6 +53,9 @@ const { values: rawValues } = parseArgs({
     },
     "dry-run": { type: "boolean", default: false },
     force: { type: "boolean", default: false },
+    // --pipeline runs the chained t2i→i2i→i2v stickman tour (PIPELINE_PHASES),
+    // feeding each phase's produced image to the next.
+    pipeline: { type: "boolean", default: false },
   },
 });
 const values = rawValues as Partial<CliValues>;
@@ -73,6 +78,8 @@ const dryRun = values["dry-run"] ?? false;
 const force = values.force ?? false;
 const prompt = values.prompt!;
 const runId = values["run-id"] ?? ulid();
+const pipeline = values.pipeline ?? false;
+const phaseList = pipeline ? PIPELINE_PHASES : PHASES;
 
 /**
  * Resolve gflow-cli's profile root in a way that mirrors Python platformdirs
@@ -147,7 +154,7 @@ await obs.prepareBrowserScene({
   width: 1920,
   height: 1080,
 });
-await obs.startRecording(masterPath);
+await obs.startRecording();
 
 const phaseRecords: Array<{
   kind: (typeof PHASES)[number]["kind"];
@@ -160,8 +167,9 @@ const phaseRecords: Array<{
 }> = [];
 
 let aborted = false;
-for (const phase of PHASES) {
-  const args = phase.args({ prompt, profile, outDir: outRoot });
+let prevArtifact: string | undefined;
+for (const phase of phaseList) {
+  const args = phase.args({ prompt, profile, outDir: outRoot, prevArtifact });
   const cmdLine = `${phase.cmd} ${args.join(" ")}`;
 
   // Dry-run: invoke the per-kind stub instead of real gflow.
@@ -205,6 +213,18 @@ for (const phase of PHASES) {
   const artifacts = readdirSync(outRoot).filter((f) =>
     phase.expectedArtifactGlob.test(f),
   );
+
+  // Pipeline chaining: the next phase consumes this one's newest image
+  // (t2i image → i2i --ref → i2v start frame).
+  if (pipeline) {
+    const imgs = readdirSync(outRoot)
+      .filter((f) => /\.(png|jpe?g)$/i.test(f))
+      .map((f) => join(outRoot, f))
+      .map((p) => ({ p, m: statSync(p).mtimeMs }))
+      .sort((a, b) => b.m - a.m);
+    if (imgs.length > 0) prevArtifact = imgs[0].p;
+  }
+
   phaseRecords.push({
     kind: phase.kind,
     cmd: cmdLine,
@@ -231,7 +251,16 @@ for (const phase of PHASES) {
   }
 }
 
-await obs.stopRecording();
+// stopRecording returns the actual on-disk path; copy to the manifest's
+// masterPath so downstream tools (Remotion splits) find the file where the
+// manifest claims it is. OBS's own configured output directory is left
+// untouched. Skip in dry-run — FakeObsAdapter returns a sentinel that
+// never lands on disk.
+const actualMasterPath = await obs.stopRecording();
+if (!dryRun && actualMasterPath !== masterPath) {
+  copyFileSync(actualMasterPath, masterPath);
+  console.log(`[record-promo] copied master ${actualMasterPath} -> ${masterPath}`);
+}
 await obs.disconnect();
 
 const manifest = RunManifest.parse({

@@ -11,8 +11,48 @@
  * black.
  */
 
+import { statSync } from "node:fs";
+
 import OBSWebSocket from "obs-websocket-js";
 import { pickWindow } from "./window-match";
+
+/**
+ * Wait until ``path``'s size has been the same on two consecutive samples,
+ * or throw on timeout. obs-websocket v5 ``StopRecord`` returns the moment
+ * OBS initiates the stop; the muxer finalization (moov atom, container
+ * close) happens asynchronously, so an immediate read of the file can land
+ * on a 0-byte or truncated capture. Polling the file size is dumb but
+ * robust — no dependence on event-emitter typing.
+ *
+ * Exported so Phase-3 harnesses and tests can reuse it without reimplementing.
+ */
+export async function waitForStableSize(
+  path: string,
+  opts: { timeoutMs: number; intervalMs: number },
+): Promise<void> {
+  const start = Date.now();
+  let lastSize = -1;
+  let stableCount = 0;
+  while (Date.now() - start < opts.timeoutMs) {
+    let size = 0;
+    try {
+      size = statSync(path).size;
+    } catch {
+      size = 0;
+    }
+    if (size > 0 && size === lastSize) {
+      stableCount += 1;
+      if (stableCount >= 2) return;
+    } else {
+      stableCount = 0;
+      lastSize = size;
+    }
+    await new Promise((r) => setTimeout(r, opts.intervalMs));
+  }
+  throw new Error(
+    `recording at ${path} did not finalize within ${opts.timeoutMs}ms`,
+  );
+}
 
 export interface BrowserSceneOptions {
   /** Scene to (create and) make active. */
@@ -41,8 +81,17 @@ export interface ObsAdapter {
    * size cannot change while an output is active).
    */
   prepareBrowserScene(opts: BrowserSceneOptions): Promise<void>;
-  startRecording(outputPath: string): Promise<void>;
-  stopRecording(): Promise<void>;
+  /**
+   * Start recording. The output path is determined by OBS's own configured
+   * output mode (Simple Output / Advanced Output / Custom FFmpeg) — we do NOT
+   * mutate the operator's profile to redirect it. The actual on-disk path is
+   * returned by ``stopRecording()`` (obs-websocket v5 ``StopRecord`` response
+   * carries ``outputPath``); the caller copies or renames to its desired
+   * location.
+   */
+  startRecording(): Promise<void>;
+  /** Stop recording and return the actual on-disk path of the produced file. */
+  stopRecording(): Promise<string>;
   disconnect(): Promise<void>;
 }
 
@@ -54,11 +103,12 @@ export class FakeObsAdapter implements ObsAdapter {
   async prepareBrowserScene(opts: BrowserSceneOptions): Promise<void> {
     this.calls.push(["prepareBrowserScene", opts.sceneName, opts.sourceName]);
   }
-  async startRecording(p: string): Promise<void> {
-    this.calls.push(["startRecording", p]);
+  async startRecording(): Promise<void> {
+    this.calls.push(["startRecording"]);
   }
-  async stopRecording(): Promise<void> {
+  async stopRecording(): Promise<string> {
     this.calls.push(["stopRecording"]);
+    return "fake://master.mp4";
   }
   async disconnect(): Promise<void> {
     this.calls.push(["disconnect"]);
@@ -80,6 +130,21 @@ export class RealObsAdapter implements ObsAdapter {
   }
 
   async prepareBrowserScene(opts: BrowserSceneOptions): Promise<void> {
+    // 0) Self-heal: a previous capture that aborted may have left OBS in
+    //    outputActive=true (the inner stopRecording sometimes doesn't reach
+    //    the OBS WebSocket layer cleanly). Stop any leftover recording
+    //    before SetVideoSettings — without this, the next run fails with
+    //    "Video settings cannot be changed while an output is active" AFTER
+    //    the python child has already emitted READY and is about to spend
+    //    paid generation credits that nothing is recording. See memory
+    //    `obs-state-leak-recovery`.
+    const recStatus = (await this.obs.call("GetRecordStatus")) as { outputActive: boolean };
+    if (recStatus.outputActive) {
+      await this.obs.call("StopRecord");
+      // Brief settle so the muxer release is visible to SetVideoSettings.
+      await new Promise((r) => setTimeout(r, 500));
+    }
+
     // 1) 16:9 master canvas. Cannot change while recording — callers run this
     //    before startRecording.
     await this.obs.call("SetVideoSettings", {
@@ -201,18 +266,26 @@ export class RealObsAdapter implements ObsAdapter {
     });
   }
 
-  async startRecording(outputPath: string): Promise<void> {
-    // obs-websocket v5: file path lives in the active profile under AdvOut.FFFilePath.
-    // Typings don't expose the parameter shape; cast through `unknown` to avoid `any`.
-    await this.obs.call("SetProfileParameter" as never, {
-      parameterCategory: "AdvOut",
-      parameterName: "FFFilePath",
-      parameterValue: outputPath,
-    } as unknown as never);
+  async startRecording(): Promise<void> {
+    // Output path is OBS's own configured destination — we do NOT mutate the
+    // operator's profile (the SetProfileParameter dance against AdvOut.FFFilePath
+    // is a no-op unless they're on Custom FFmpeg output, and silently changes
+    // their profile config when they're not). The actual on-disk file is
+    // returned by stopRecording() below.
     await this.obs.call("StartRecord");
   }
-  async stopRecording(): Promise<void> {
-    await this.obs.call("StopRecord");
+  async stopRecording(): Promise<string> {
+    // obs-websocket v5 StopRecord returns { outputPath: string } — the actual
+    // file the recording landed in. Caller copies/renames to its target.
+    const res = (await this.obs.call("StopRecord")) as { outputPath?: string };
+    if (!res.outputPath) {
+      throw new Error("OBS StopRecord did not return outputPath");
+    }
+    // StopRecord returns when OBS initiates the stop, NOT when the muxer has
+    // finished writing the file. Wait for the file size to stabilize before
+    // returning so the caller can safely copy/probe it.
+    await waitForStableSize(res.outputPath, { timeoutMs: 10_000, intervalMs: 250 });
+    return res.outputPath;
   }
   async disconnect(): Promise<void> {
     await this.obs.disconnect();
