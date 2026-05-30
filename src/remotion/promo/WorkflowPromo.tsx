@@ -239,10 +239,16 @@ const BeatI2I: React.FC = () => (
   </>
 );
 
+// Reveal delay for Beat I2V (terminal types for ~6s, panel fades in at 7s).
+// Used by both the ArtifactPanel opacity-fade and the nested Sequence that
+// delays the OffthreadVideo's t=0 to reveal time — see remotion-sequence-local-frame-trap.
+const I2V_REVEAL_DELAY_FRAMES = 7 * FPS;
+
 const BeatI2V: React.FC = () => (
   // The actual Veo video is 8s; play it inside the lower panel after the
-  // command is typed. We hold the last frame briefly via the panel's natural
-  // duration spilling past the video.
+  // command is typed. Wrap OffthreadVideo in <Sequence from={reveal}> so its
+  // t=0 lands at reveal time — without this, the 8s clip plays out invisibly
+  // behind the panel's opacity:0 and we only see the frozen last frame fade in.
   <>
     <Terminal
       command={I2V_CMD}
@@ -251,16 +257,18 @@ const BeatI2V: React.FC = () => (
       output={"→ Veo interpolates start → end · 8s · omni-flash"}
     />
     <ArtifactPanel
-      revealDelayFrames={7 * FPS}
+      revealDelayFrames={I2V_REVEAL_DELAY_FRAMES}
       topOffset={TOP_HEIGHT}
       height={BOTTOM_HEIGHT}
     >
-      <OffthreadVideo
-        src={staticFile("promo/stickman-001/03-video.mp4")}
-        style={{ width: "100%", height: "100%", objectFit: "cover" }}
-        muted
-        playbackRate={1}
-      />
+      <Sequence from={I2V_REVEAL_DELAY_FRAMES}>
+        <OffthreadVideo
+          src={staticFile("promo/stickman-001/03-video.mp4")}
+          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+          muted
+          playbackRate={1}
+        />
+      </Sequence>
     </ArtifactPanel>
   </>
 );
