@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "runId": "stickman-workflow-004",
+  "profile": "promo-denon82",
+  "dryRun": false,
+  "masterPath": "C:\\Users\\ffrol\\gflow-output\\promo\\stickman-workflow-004\\master.mp4",
+  "phases": [
+    {
+      "kind": "t2i",
+      "startedMs": 5177,
+      "endedMs": 45214,
+      "artifact": "C:\\Users\\ffrol\\gflow-output\\promo\\stickman-workflow-004\\01-t2i.jpg"
+    },
+    {
+      "kind": "i2i",
+      "startedMs": 45214,
+      "endedMs": 96575,
+      "artifact": "C:\\Users\\ffrol\\gflow-output\\promo\\stickman-workflow-004\\02-i2i.jpg"
+    },
+    {
+      "kind": "video",
+      "startedMs": 96575,
+      "endedMs": 183174,
+      "artifact": "C:\\Users\\ffrol\\gflow-output\\promo\\stickman-workflow-004\\03-video.mp4"
+    }
+  ]
+}

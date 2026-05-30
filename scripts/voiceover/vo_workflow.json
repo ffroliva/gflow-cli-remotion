@@ -1,0 +1,20 @@
+{
+  "rate": "-5%",
+  "variants": [
+    {
+      "id": "workflow-pip",
+      "voice": "en-US-AndrewNeural",
+      "text": "One prompt. One command. gflow image t2i, and Imagen draws your initial frame — a stickman at 5 AM, pre-dawn focus. Local file, no clicking through menus. Now gflow image i2i — the first frame becomes the reference. Same character, refined into the end state, triumphant at sunrise. Then gflow video i2v with both frames. Veo interpolates the motion between them. The stickman rises, catches the gold. Eight seconds, one MP4, scriptable. This is gflow, version zero point ten. pip install gflow-cli."
+    },
+    {
+      "id": "workflow-data",
+      "voice": "en-US-AndrewNeural",
+      "text": "One prompt. One command. gflow image t2i, and Imagen draws your initial frame — a stickman at 5 AM, pre-dawn focus. Local file, no clicking through menus. Now gflow image i2i — the first frame becomes the reference. Same character, refined into the end state, triumphant at sunrise. Then gflow video i2v with both frames. Veo interpolates the motion between them. The stickman rises, catches the gold. Eight seconds, one MP4, scriptable. Every prompt, every output, indexed locally. This is gflow, version zero point ten."
+    },
+    {
+      "id": "workflow-minio",
+      "voice": "en-US-AndrewNeural",
+      "text": "One prompt. One command. gflow image t2i, and Imagen draws your initial frame — a stickman at 5 AM, pre-dawn focus. Local file, no clicking through menus. Now gflow image i2i — the first frame becomes the reference. Same character, refined into the end state, triumphant at sunrise. Then gflow video i2v with both frames. Veo interpolates the motion between them. The stickman rises, catches the gold. Eight seconds, one MP4, scriptable. Your bucket. Not someone else's cloud. This is gflow, version zero point ten."
+    }
+  ]
+}
