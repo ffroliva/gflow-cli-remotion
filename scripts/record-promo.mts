@@ -168,8 +168,9 @@ const phaseRecords: Array<{
 
 let aborted = false;
 let prevArtifact: string | undefined;
+let firstArtifact: string | undefined; // t2i result — i2v start frame
 for (const phase of phaseList) {
-  const args = phase.args({ prompt, profile, outDir: outRoot, prevArtifact });
+  const args = phase.args({ prompt, profile, outDir: outRoot, prevArtifact, firstArtifact });
   const cmdLine = `${phase.cmd} ${args.join(" ")}`;
 
   // Dry-run: invoke the per-kind stub instead of real gflow.
@@ -180,6 +181,9 @@ for (const phase of phaseList) {
       : join("tests", "fixtures", "fake-gflow", `${phase.kind}.sh`);
   const cmdToRun = dryRun ? stub : phase.cmd;
   const argsToRun = dryRun ? [outRoot] : args;
+
+  // Snapshot directory before the phase so we can diff phase-local artifacts.
+  const prePhaseFiles = new Set(readdirSync(outRoot));
 
   const startedMs = nowMs();
   const eventLines: string[] = [];
@@ -210,19 +214,24 @@ for (const phase of phaseList) {
   });
   const endedMs = nowMs();
 
-  const artifacts = readdirSync(outRoot).filter((f) =>
-    phase.expectedArtifactGlob.test(f),
+  // Phase-local artifacts: only files that did not exist before this phase ran.
+  const artifacts = readdirSync(outRoot).filter(
+    (f) => !prePhaseFiles.has(f) && phase.expectedArtifactGlob.test(f),
   );
 
-  // Pipeline chaining: the next phase consumes this one's newest image
-  // (t2i image → i2i --ref → i2v start frame).
-  if (pipeline) {
-    const imgs = readdirSync(outRoot)
-      .filter((f) => /\.(png|jpe?g)$/i.test(f))
+  // Pipeline chaining: advance prevArtifact to this phase's newest image.
+  // firstArtifact is set once (after t2i) and never overwritten — it becomes
+  // the i2v start frame while prevArtifact (i2i output) becomes --end-image.
+  if (pipeline && exitCode === 0) {
+    const newImgs = readdirSync(outRoot)
+      .filter((f) => !prePhaseFiles.has(f) && /\.(png|jpe?g)$/i.test(f))
       .map((f) => join(outRoot, f))
       .map((p) => ({ p, m: statSync(p).mtimeMs }))
       .sort((a, b) => b.m - a.m);
-    if (imgs.length > 0) prevArtifact = imgs[0].p;
+    if (newImgs.length > 0) {
+      prevArtifact = newImgs[0].p;
+      if (!firstArtifact) firstArtifact = newImgs[0].p;
+    }
   }
 
   phaseRecords.push({

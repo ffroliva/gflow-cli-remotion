@@ -57,6 +57,7 @@
             "type": "string",
             "enum": [
               "t2i",
+              "i2i",
               "batch",
               "video",
               "data"

@@ -2,7 +2,7 @@ import { z } from "zod";
 
 // ── RunManifest ──────────────────────────────────────────────────────────────
 
-export const PhaseKind = z.enum(["t2i", "batch", "video", "data"]);
+export const PhaseKind = z.enum(["t2i", "i2i", "batch", "video", "data"]);
 export type PhaseKind = z.infer<typeof PhaseKind>;
 
 export const StructLogEvent = z.object({

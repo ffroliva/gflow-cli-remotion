@@ -1,8 +1,36 @@
 # Capturing the promo master (terminal + browser generation)
 
 How to capture the real footage that the Remotion compositions composite into
-the promo. Findings verified 2026-05-28 against gflow-cli v0.9.1 on this
+the promo. Last verified 2026-05-31 against gflow-cli v0.11.0 on this
 Windows host.
+
+## Key fix in v0.11.0
+
+`gflow video i2v` was silently routed to T2V in v0.10.x (issue #125), dropping
+the start image and `--end-image` end frame entirely. **v0.11.0 fixes this.**
+Always run `gflow --version` before a credit-spending pipeline run to confirm
+you are on v0.11.0 or later:
+
+```bash
+gflow --version  # must be 0.11.0+
+```
+
+## The full pipeline: t2i → i2i → i2v with start + end frames
+
+The `--pipeline` flag on `record-promo` runs the three-phase stickman showcase:
+
+1. **t2i** — dark pre-dawn stickman image (start frame for i2v)
+2. **i2i** — sunrise stickman image with `--ref <t2i-result>` (end frame for i2v)
+3. **i2v** — `gflow video i2v <t2i.png> <motion> --end-image <i2i.png>` —
+   Flow interpolates dark→bright with the motion prompt guiding the animation
+
+```bash
+pnpm record-promo --pipeline --profile promo-<name> --run-id $(date +%Y-%m-%d)-001
+```
+
+The orchestrator tracks `firstArtifact` (t2i output) separately from
+`prevArtifact` (most recent image) so i2v always receives the correct start and
+end frames. It aborts if either is missing or they are the same file.
 
 ## The two browsers (don't confuse them)
 
@@ -70,11 +98,37 @@ wrong window.
 **Operator prerequisites:**
 1. OBS running with **obs-websocket enabled** (Tools → WebSocket Server Settings;
    default port 4455). One-time details in [SETUP.md](SETUP.md).
-2. Export the websocket password, ensure a live gflow session + the Flow Chrome
-   window is open, then record:
+2. The websocket **password** in `OBS_WS_PASSWORD`, a live gflow session, and the
+   Flow Chrome window open, then record.
+
+**OBS_WS_PASSWORD — where it comes from (two-sided):**
+- *Server side (in OBS):* the password lives in OBS → Tools → WebSocket Server
+  Settings. OBS persists it to
+  `%APPDATA%\obs-studio\plugin_config\obs-websocket\config.json`
+  (`server_enabled`, `server_port`, `auth_required`, `server_password`). If
+  WebSocket is already enabled there, **nothing needs creating server-side** —
+  just mirror the value.
+- *Client side (this repo):* `record-promo.mts` calls `import "dotenv/config"`,
+  so it auto-loads a gitignored **`.env`** at the repo root. Put the password
+  there once for systemic reuse — no per-shell `export` needed:
+
+  ```dotenv
+  # .env (gitignored via .gitignore: `.env`)
+  OBS_WS_PASSWORD=<value from OBS WebSocket Server Settings>
+  ```
+
+  To (re)sync `.env` from OBS's own config and verify it connects:
+
+  ```bash
+  node -e '(async()=>{const fs=require("fs");const c=JSON.parse(fs.readFileSync(process.env.APPDATA+"/obs-studio/plugin_config/obs-websocket/config.json","utf8"));let e="";try{e=fs.readFileSync(".env","utf8")}catch{}e=/^OBS_WS_PASSWORD=/m.test(e)?e.replace(/^OBS_WS_PASSWORD=.*$/m,"OBS_WS_PASSWORD="+c.server_password):e+"\nOBS_WS_PASSWORD="+c.server_password+"\n";fs.writeFileSync(".env",e);const{default:O}=await import("obs-websocket-js");const o=new O();await o.connect("ws://127.0.0.1:"+c.server_port,c.server_password,{rpcVersion:1});console.log("OBS connect OK");await o.disconnect();})()'
+  ```
+
+  If you change the password in the OBS GUI, re-run the snippet above to re-sync
+  `.env`. `scrubEnv` drops `OBS_WS_PASSWORD` from the gflow child env (it matches
+  the `^OBS_WS` forbidden pattern), so it never leaks into the recorded session.
 
 ```bash
-export OBS_WS_PASSWORD='<your obs websocket password>'
+# password is auto-loaded from .env — no export needed
 pnpm record-promo --profile promo-<name> --run-id $(date +%Y-%m-%d)-001
 ```
 
