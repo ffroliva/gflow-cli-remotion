@@ -55,7 +55,7 @@ export const splitPromoSchema = z.object({
 
 type Props = z.infer<typeof splitPromoSchema>;
 
-const DEFAULT_COMMAND = 'gflow image t2i "a serene mountain lake at dawn"';
+const DEFAULT_COMMAND = 'gflow image t2i "stickman waking at dawn" --model nano-pro';
 
 const leadFor = (mode: Props["mode"]) =>
   mode === "prompt-first" ? PROMPT_FIRST_LEAD : 0;
@@ -81,24 +81,33 @@ export function splitDuration(
 // ── Browser framing ────────────────────────────────────────────────────────
 // Source crop in the 1920x1080 master pixel space: drop the top ~210px of
 // browser chrome so panels open on the authentic Flow app header.
+// anchorX=0.5 → centered (default for landscape), anchorX<0.5 → pan left to
+// expose the gallery sidebar + thumbnail (needed for portrait panels where the
+// height-driven scale factor makes the visible x-range very narrow).
 const SRC = { w: 1920, h: 1080 } as const;
 const CROP = { x: 0, y: 210, w: 1920, h: 870 } as const;
 
-function coverFrame(panelW: number, panelH: number, anchorY = 0.5) {
+function coverFrame(panelW: number, panelH: number, anchorY = 0.5, anchorX = 0.5) {
   const scale = Math.max(panelW / CROP.w, panelH / CROP.h);
   const vidW = SRC.w * scale;
   const vidH = SRC.h * scale;
-  const left = -CROP.x * scale + (panelW - CROP.w * scale) / 2;
+  const left = -CROP.x * scale + (panelW - CROP.w * scale) * anchorX;
   const top = -CROP.y * scale + (panelH - CROP.h * scale) * anchorY;
   return { vidW, vidH, left, top };
 }
 
-const BrowserPanel: React.FC<{ w: number; h: number; anchorY?: number }> = ({
+const BrowserPanel: React.FC<{ w: number; h: number; anchorY?: number; anchorX?: number }> = ({
   w,
   h,
   anchorY = 0.5,
+  anchorX,
 }) => {
-  const { vidW, vidH, left, top } = coverFrame(w, h, anchorY);
+  // Portrait panels have a large height-driven scale that makes the visible
+  // x-range narrow (~742px of 1920px source). Pan left (anchorX≈0.1) to keep
+  // the gallery sidebar + thumbnail in frame instead of showing only the right
+  // half of the UI. Landscape panels stay centered (anchorX=0.5).
+  const resolvedAnchorX = anchorX ?? (h > w ? 0.1 : 0.5);
+  const { vidW, vidH, left, top } = coverFrame(w, h, anchorY, resolvedAnchorX);
   return (
     <div
       style={{
@@ -110,7 +119,7 @@ const BrowserPanel: React.FC<{ w: number; h: number; anchorY?: number }> = ({
       }}
     >
       <OffthreadVideo
-        src={staticFile("master.mp4")}
+        src={staticFile("master-trim01.mp4")}
         style={{ position: "absolute", width: vidW, height: vidH, left, top }}
       />
     </div>
