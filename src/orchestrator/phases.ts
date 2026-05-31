@@ -161,7 +161,7 @@ export const PIPELINE_PHASES: readonly PhaseDef[] = [
         "video", "i2v", firstArtifact, STICKMAN_MOTION,
         "--end-image", prevArtifact,
         "--aspect", "9:16",
-        "--model", "omni-flash",
+        "--model", "veo-fast",
         "--profile", profile,
         "--out-dir", outDir,
       ];
