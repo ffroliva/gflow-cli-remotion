@@ -11,12 +11,14 @@
  * timeline is animated with interpolate()/spring() on useCurrentFrame() — no
  * CSS transitions/animations, assets via staticFile() + <Img>.
  *
- * Shot timeline (~18s @ 30fps ≈ 540 frames):
- *   0–3s   hook caption (per-variant text)
- *   3–7s   terminal types `gflow character create …`
- *   7–11s  animated editor panel: face slot fills → face.jpg reveal
- *   11–16s triptych body slides in + "front · side · back …" caption
- *   16–18s CTA card (install + repo)
+ * Shot timeline (~24.8s @ 30fps ≈ 744 frames):
+ *   0–3s     hook caption (per-variant text)
+ *   3–16.9s  terminal: types `gflow character create …` at a readable pace,
+ *            holds ~1.5s, then a structlog-flavored sign-off (generating face
+ *            → generating triptych body → ✓ character created · bound)
+ *   16.9–20.6s animated editor panel: face slot fills → face.jpg reveal
+ *   20.6–25.3s triptych body slides in + "front · side · back …" caption
+ *   ~22.3–24.8s CTA card (install + repo)
  */
 
 import {
@@ -45,11 +47,11 @@ export const characterPromoSchema = z.object({
 type Props = z.infer<typeof characterPromoSchema>;
 
 // Shot boundaries (frames @ FPS). Tunable in Studio.
-const HOOK_END = 3 * FPS; // 0–3s
-const TERMINAL_END = 7 * FPS; // 3–7s
-const FACE_END = 11 * FPS; // 7–11s
-const BODY_END = 16 * FPS; // 11–16s
-// 16–18s → CTA (runs to the end of the composition).
+const HOOK_END = 3 * FPS; // 0–3s (90)
+const TERMINAL_END = 417; // 3–13.9s — slow type + 1.5s hold + sign-off
+const FACE_END = 528; // ~13.9–17.6s
+const BODY_END = 669; // ~17.6–22.3s
+// 669–744 → CTA (runs to the end of the composition).
 
 // ---------------------------------------------------------------------------
 // Shot 1 — hook caption
@@ -123,16 +125,40 @@ const COMMAND_LINES: readonly string[] = [
 
 const FULL_COMMAND = COMMAND_LINES.join("\n");
 
+// Typing pace + sign-off cadence (all relative to the terminal shot start).
+// ~1.1 chars/frame reads comfortably (the old 1.6 raced past); after typing we
+// hold so the viewer can read the full command, then reveal a structlog-style
+// sign-off line by line, leading into the editor reveal.
+const TYPE_SPEED = 1.1; // chars per frame
+const TYPE_FRAMES = Math.ceil(FULL_COMMAND.length / TYPE_SPEED); // ~195
+const HOLD_FRAMES = Math.round(1.5 * FPS); // 45 — pause after typing finishes
+const SIGNOFF_START = TYPE_FRAMES + HOLD_FRAMES; // 240
+const SIGNOFF_STEP = Math.round(0.9 * FPS); // 27 — gap between sign-off lines
+
+// The sign-off mimics a live `gflow character create` run: two working lines
+// then a success line, in the gflow/structlog terminal voice.
+const SIGNOFF_LINES: ReadonlyArray<{ text: string; success?: boolean }> = [
+  { text: "▸ generating face reference…" },
+  { text: "▸ generating triptych body…" },
+  {
+    text: '✓ character "Marina" created · face + triptych body bound',
+    success: true,
+  },
+];
+
 const TerminalShot: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const enter = spring({ frame, fps, config: { damping: 200 } });
   const y = interpolate(enter, [0, 1], [40, 0]);
 
-  // Type ~1.6 chars/frame; finish typing with time to spare before the cut.
-  const typed = Math.min(FULL_COMMAND.length, Math.floor(frame * 1.6));
+  // Slow, readable typing reveal across the whole flattened command.
+  const typed = Math.min(FULL_COMMAND.length, Math.floor(frame * TYPE_SPEED));
   const shown = FULL_COMMAND.slice(0, typed);
   const doneTyping = typed >= FULL_COMMAND.length;
+  // During the post-typing hold the prompt cursor blinks on the finished line;
+  // once the sign-off begins it disappears (the "run" has started).
+  const inSignoff = frame >= SIGNOFF_START;
 
   return (
     <AbsoluteFill
@@ -195,11 +221,38 @@ const TerminalShot: React.FC = () => {
         >
           <span style={{ color: theme.accent }}>$ </span>
           {shown}
-          <span
-            style={{ opacity: doneTyping ? cursorOpacity(frame, fps) : 1 }}
-          >
-            ▋
-          </span>
+          {/* Cursor: blinks while typing/holding; hidden once the run starts. */}
+          {inSignoff ? null : (
+            <span
+              style={{ opacity: doneTyping ? cursorOpacity(frame, fps) : 1 }}
+            >
+              ▋
+            </span>
+          )}
+          {/* Sign-off — a structlog-style run, revealed line by line. */}
+          {SIGNOFF_LINES.map((line, i) => {
+            const start = SIGNOFF_START + i * SIGNOFF_STEP;
+            const reveal = interpolate(
+              frame,
+              [start, start + Math.round(0.35 * fps)],
+              [0, 1],
+              { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
+            );
+            return (
+              <div
+                key={line.text}
+                style={{
+                  marginTop: i === 0 ? 28 : 6,
+                  fontSize: 30,
+                  color: line.success ? theme.accent : theme.dim,
+                  opacity: reveal,
+                  transform: `translateY(${interpolate(reveal, [0, 1], [10, 0])}px)`,
+                }}
+              >
+                {line.text}
+              </div>
+            );
+          })}
         </div>
       </div>
     </AbsoluteFill>

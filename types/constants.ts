@@ -19,6 +19,8 @@ export const README_DURATION = 30 * FPS; // 30s loop
 // Hook display window shared by Master title card + Social intro.
 export const HOOK_DURATION = Math.round(2.5 * FPS);
 
-// `gflow character` social promo (9:16). ~18s walkthrough of one-command
-// character creation, fanned out one comp id per A/B hook angle.
-export const CHARACTER_PROMO_DURATION = 18 * FPS; // 540 frames @ 30fps
+// `gflow character` social promo (9:16). ~25s walkthrough of one-command
+// character creation, fanned out one comp id per A/B hook angle. The terminal
+// shot types the command at a readable pace, holds ~1.5s, then plays a
+// structlog-flavored sign-off before the editor reveals — see CharacterPromo.
+export const CHARACTER_PROMO_DURATION = 744; // 24.8s @ 30fps
