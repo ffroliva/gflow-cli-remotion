@@ -101,7 +101,11 @@ export const PHASES: readonly PhaseDef[] = [
     // to the project. Two image generations → the longest non-video phase.
     kind: "character",
     cmd: "gflow",
-    args: ({ profile, outDir, projectId }) => [
+    // NOTE: `gflow character create` (0.12.0) has no `--out` flag — it persists
+    // reference images into the entity/data store, not a local dir. The promo
+    // asset for this phase is the OBS `master.mp4`, so no per-phase artifact is
+    // expected on disk (expectedArtifactGlob below matches nothing).
+    args: ({ profile, projectId }) => [
       "character",
       "create",
       "--project",
@@ -118,11 +122,15 @@ export const PHASES: readonly PhaseDef[] = [
       "nano2",
       "--profile",
       profile,
-      "--out",
-      outDir,
+      // denon82 is a pt-locale Google account. Flow's editor URL locale path
+      // segment is a SHORT code (/fx/pt/...), not BCP-47 — passing the default
+      // "en-US" builds /fx/en-US/... which 404s and redirects to /fx/pt/404.
+      // "pt" matches the account and is verified to enter the editor.
+      "--locale",
+      "pt",
     ],
     maxDurationMs: 360_000,
-    expectedArtifactGlob: /\.(png|jpe?g)$/i,
+    expectedArtifactGlob: /^$/, // gflow writes no local file; OBS master.mp4 is the asset
   },
 ];
 

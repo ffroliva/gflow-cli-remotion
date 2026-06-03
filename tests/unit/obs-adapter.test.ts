@@ -34,6 +34,12 @@ describe("FakeObsAdapter", () => {
     expect(a.calls).toEqual([]);
     expect(b.calls).toEqual([]);
   });
+
+  it("stopRecording returns the path passed to startRecording", async () => {
+    const fake = new FakeObsAdapter();
+    await fake.startRecording("/tmp/run/master.mp4");
+    await expect(fake.stopRecording()).resolves.toBe("/tmp/run/master.mp4");
+  });
 });
 
 describe("RealObsAdapter", () => {

@@ -130,11 +130,24 @@ describe("PHASES", () => {
       expect(args[args.indexOf("--model") + 1]).toBe("nano2");
     });
 
-    it("captures face + body image artifacts (png/jpg)", () => {
+    it("pins --locale pt (denon82 account locale; en-US 404s the editor URL)", () => {
+      const args = character().args(ctx);
+      const i = args.indexOf("--locale");
+      expect(i).toBeGreaterThanOrEqual(0);
+      expect(args[i + 1]).toBe("pt");
+    });
+
+    it("does NOT pass --out (gflow character create has no such flag)", () => {
+      // gflow 0.12.0 `character create` persists reference images into the
+      // entity/data store; it has no `--out` option. Passing one exits 2.
+      expect(character().args(ctx)).not.toContain("--out");
+    });
+
+    it("expects no local artifact (OBS master.mp4 is the asset)", () => {
       const p = character();
-      expect("character-face.jpg").toMatch(p.expectedArtifactGlob);
-      expect("character-body.png").toMatch(p.expectedArtifactGlob);
-      expect("notes.txt").not.toMatch(p.expectedArtifactGlob);
+      // character create writes nothing to outDir, so the glob matches nothing.
+      expect("character-face.jpg").not.toMatch(p.expectedArtifactGlob);
+      expect("character-body.png").not.toMatch(p.expectedArtifactGlob);
     });
   });
 });

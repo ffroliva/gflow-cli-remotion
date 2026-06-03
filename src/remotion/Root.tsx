@@ -147,8 +147,10 @@ export const RemotionRoot: React.FC = () => {
         defaultProps={{
           // PLACEHOLDER — swap for the real OBS master.mp4 capture of
           // `gflow character create` (drop it in public/captures/ and point
-          // captureFile at it). This default is a committed copy of the
-          // already-rendered flex hook clip so the shell renders today.
+          // captureFile at it). The capture pipeline (record-promo + obs
+          // relocation) is wired and verified, but a clean capture environment
+          // is required: OBS must capture gflow's headed Chrome window, on a
+          // desktop with no private content. See docs/RECORDING.md.
           captureFile: "captures/_placeholder-capture.mp4",
           hookId: "flex",
           hookTitle: undefined,

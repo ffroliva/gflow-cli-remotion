@@ -20,7 +20,7 @@
  */
 
 import { spawn } from "node:child_process";
-import { mkdirSync, readdirSync } from "node:fs";
+import { mkdirSync, readdirSync, copyFileSync, existsSync } from "node:fs";
 import { hrtime } from "node:process";
 import { join } from "node:path";
 import { parseArgs } from "node:util";
@@ -271,8 +271,21 @@ for (const phase of selectedPhases) {
   }
 }
 
-await obs.stopRecording();
+const recordedPath = await obs.stopRecording();
 await obs.disconnect();
+
+// OBS writes to its own configured recording folder (Simple-mode FilePath),
+// not the path we request at start. Relocate the actual file to masterPath so
+// the manifest's masterPath is truthful and the asset lives with the run.
+// Non-destructive: we copy (leaving OBS's original) rather than move.
+if (recordedPath && recordedPath !== masterPath && existsSync(recordedPath)) {
+  copyFileSync(recordedPath, masterPath);
+  console.log(`✓ relocated OBS recording → ${masterPath}`);
+} else if (!dryRun && !existsSync(masterPath)) {
+  console.error(
+    `⚠  OBS reported no recording file (got "${recordedPath}"); master.mp4 missing`,
+  );
+}
 
 const manifest = RunManifest.parse({
   schemaVersion: 1,

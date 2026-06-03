@@ -116,12 +116,15 @@ describe("record-promo dry-run end-to-end", () => {
       manifest.phases.reduce((sum, p) => sum + p.events.length, 0),
     ).toBeGreaterThan(0);
 
-    // The character phase runs `gflow character create --project <pid>` and
-    // captures the generated face + triptych body images as artifacts.
+    // The character phase runs `gflow character create --project <pid>`. gflow
+    // persists the face + triptych body into the entity/data store — it writes
+    // no local file (no `--out` flag), so the phase reports zero on-disk
+    // artifacts; the OBS master.mp4 is the captured asset.
     const character = manifest.phases.find((p) => p.kind === "character")!;
     expect(character.cmd).toContain("character create");
     expect(character.cmd).toContain("--project");
-    expect(character.artifacts.length).toBeGreaterThan(0);
+    expect(character.cmd).not.toContain("--out");
+    expect(character.artifacts).toEqual([]);
     expect(
       character.events.some((e) => e.event === "character.entity_created"),
     ).toBe(true);
