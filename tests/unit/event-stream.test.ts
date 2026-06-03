@@ -3,13 +3,8 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { parseEventStream } from "../../src/orchestrator/event-stream";
 
-const FIXTURE_PATH = join(
-  __dirname,
-  "../fixtures/gflow-stdout/t2i.jsonl",
-);
-const FIXTURE_LINES = readFileSync(FIXTURE_PATH, "utf-8")
-  .trim()
-  .split("\n");
+const FIXTURE_PATH = join(__dirname, "../fixtures/gflow-stdout/t2i.jsonl");
+const FIXTURE_LINES = readFileSync(FIXTURE_PATH, "utf-8").trim().split("\n");
 
 describe("parseEventStream()", () => {
   it("parses JSON lines and drops malformed ones", () => {
@@ -22,12 +17,32 @@ describe("parseEventStream()", () => {
     const result = parseEventStream(FIXTURE_LINES);
     for (const e of result) {
       expect(e.event).toMatch(
-        /^(ui_automation|ui_automation_video|image_batch|reference_attached|error_raised)/,
+        /^(ui_automation|ui_automation_video|image_batch|character|reference_attached|error_raised)/,
       );
     }
     expect(
       result.find((e) => e.event === "random_internal_debug"),
     ).toBeUndefined();
+  });
+
+  it("keeps gflow character.* events through the allow-list", () => {
+    const charLines = readFileSync(
+      join(__dirname, "../fixtures/gflow-stdout/character.jsonl"),
+      "utf-8",
+    )
+      .trim()
+      .split("\n");
+    const result = parseEventStream(charLines);
+    expect(result.length).toBeGreaterThan(0);
+    for (const e of result) {
+      expect(e.event).toMatch(/^character/);
+    }
+    // Mirrors the real gflow character lifecycle: entity created, then the
+    // face slot (0) and triptych body slot (1) each generating → done.
+    const names = result.map((e) => e.event);
+    expect(names).toContain("character.entity_created");
+    expect(names).toContain("character.slot_generating");
+    expect(names).toContain("character.slot_done");
   });
 
   it("redacts emails in event data", () => {

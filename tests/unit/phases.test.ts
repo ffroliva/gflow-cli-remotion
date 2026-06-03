@@ -2,23 +2,29 @@ import { describe, it, expect } from "vitest";
 import { PHASES } from "../../src/orchestrator/phases";
 
 describe("PHASES", () => {
-  const ctx = { prompt: "test prompt", profile: "promo-test", outDir: "/tmp/x" };
+  const ctx = {
+    prompt: "test prompt",
+    profile: "promo-test",
+    outDir: "/tmp/x",
+    projectId: "proj-123",
+  };
 
-  it("defines exactly 4 phases", () => {
-    expect(PHASES).toHaveLength(4);
+  it("defines exactly 5 phases", () => {
+    expect(PHASES).toHaveLength(5);
   });
 
   it("each phase has a unique kind", () => {
     const kinds = PHASES.map((p) => p.kind);
-    expect(new Set(kinds).size).toBe(4);
+    expect(new Set(kinds).size).toBe(5);
   });
 
-  it("kinds are in tour order: t2i → batch → video → data", () => {
+  it("kinds are in tour order: t2i → batch → video → data → character", () => {
     expect(PHASES.map((p) => p.kind)).toEqual([
       "t2i",
       "batch",
       "video",
       "data",
+      "character",
     ]);
   });
 
@@ -28,7 +34,7 @@ describe("PHASES", () => {
     }
   });
 
-  it("t2i, batch, video receive the profile arg; data does not", () => {
+  it("t2i, batch, video, character receive the profile arg; data does not", () => {
     for (const p of PHASES) {
       const args = p.args(ctx);
       if (p.kind === "data") {
@@ -52,5 +58,44 @@ describe("PHASES", () => {
     expect("batch-3.jpg").toMatch(PHASES[1]!.expectedArtifactGlob);
     expect("video.mp4").toMatch(PHASES[2]!.expectedArtifactGlob);
     expect("image-1.png").not.toMatch(PHASES[3]!.expectedArtifactGlob); // data: no artifacts
+  });
+
+  describe("character phase", () => {
+    const character = () => PHASES.find((p) => p.kind === "character")!;
+
+    it("invokes `gflow character create`", () => {
+      const p = character();
+      const args = p.args(ctx);
+      expect(p.cmd).toBe("gflow");
+      expect(args.slice(0, 2)).toEqual(["character", "create"]);
+    });
+
+    it("threads the required --project <pid>", () => {
+      const args = character().args(ctx);
+      const i = args.indexOf("--project");
+      expect(i).toBeGreaterThanOrEqual(0);
+      expect(args[i + 1]).toBe("proj-123");
+    });
+
+    it("passes a name, face-prompt, voice, personality and model", () => {
+      const args = character().args(ctx);
+      for (const flag of [
+        "--name",
+        "--face-prompt",
+        "--voice",
+        "--personality",
+        "--model",
+      ]) {
+        expect(args).toContain(flag);
+      }
+      expect(args[args.indexOf("--model") + 1]).toBe("nano2");
+    });
+
+    it("captures face + body image artifacts (png/jpg)", () => {
+      const p = character();
+      expect("character-face.jpg").toMatch(p.expectedArtifactGlob);
+      expect("character-body.png").toMatch(p.expectedArtifactGlob);
+      expect("notes.txt").not.toMatch(p.expectedArtifactGlob);
+    });
   });
 });

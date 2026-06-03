@@ -75,6 +75,23 @@ const prompt = values.prompt!;
 const runId = values["run-id"] ?? ulid();
 
 /**
+ * Flow project id threaded into the `character` phase — `gflow character
+ * create` cannot run without `--project <pid>`. For a live recording the
+ * operator obtains one with `gflow project create --json` and exports it as
+ * GFLOW_PROMO_PROJECT_ID. In a dry-run the stub ignores the value, so a stable
+ * placeholder keeps the command line deterministic for the manifest.
+ */
+const projectId =
+  process.env.GFLOW_PROMO_PROJECT_ID ?? (dryRun ? "promo-dryrun-project" : "");
+if (!dryRun && !projectId) {
+  console.error(
+    "GFLOW_PROMO_PROJECT_ID is required for a live recording (the 'character' " +
+      "phase needs --project). Run `gflow project create --json` and export it.",
+  );
+  process.exit(2);
+}
+
+/**
  * Resolve gflow-cli's profile root in a way that mirrors Python platformdirs
  * `user_data_dir("gflow-cli", "ffroliva")` byte-for-byte — verified against
  * the gflow-cli auth module 2026-05-28.
@@ -150,7 +167,7 @@ const phaseRecords: Array<{
 
 let aborted = false;
 for (const phase of PHASES) {
-  const args = phase.args({ prompt, profile, outDir: outRoot });
+  const args = phase.args({ prompt, profile, outDir: outRoot, projectId });
   const cmdLine = `${phase.cmd} ${args.join(" ")}`;
 
   // Dry-run: invoke the per-kind stub instead of real gflow.

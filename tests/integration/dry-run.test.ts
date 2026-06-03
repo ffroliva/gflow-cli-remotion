@@ -1,6 +1,13 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync, rmSync } from "node:fs";
+import {
+  mkdtempSync,
+  mkdirSync,
+  writeFileSync,
+  readFileSync,
+  existsSync,
+  rmSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { RunManifest } from "../../types/schema";
@@ -14,7 +21,9 @@ interface RunEnv {
   envExtra: Record<string, string>;
 }
 
-function setupHermeticEnv(opts: { markerContent?: string | null } = {}): RunEnv {
+function setupHermeticEnv(
+  opts: { markerContent?: string | null } = {},
+): RunEnv {
   const profileRoot = mkdtempSync(join(tmpdir(), "promo-pr-"));
   const profileDir = join(profileRoot, "profile_promo-smoke");
   mkdirSync(profileDir, { recursive: true });
@@ -72,7 +81,7 @@ describe("record-promo dry-run end-to-end", () => {
     rmSync(env.outRoot, { recursive: true, force: true });
   });
 
-  it("produces a valid run.json after a 4-phase dry-run tour", () => {
+  it("produces a valid run.json after a 5-phase dry-run tour", () => {
     const result = runRecord(env, [
       "--profile",
       "promo-smoke",
@@ -90,12 +99,13 @@ describe("record-promo dry-run end-to-end", () => {
     );
     expect(manifest.runId).toBe(env.runId);
     expect(manifest.profile).toBe("promo-smoke");
-    expect(manifest.phases).toHaveLength(4);
+    expect(manifest.phases).toHaveLength(5);
     expect(manifest.phases.map((p) => p.kind)).toEqual([
       "t2i",
       "batch",
       "video",
       "data",
+      "character",
     ]);
     for (const p of manifest.phases) {
       expect(p.exitCode).toBe(0);
@@ -105,6 +115,16 @@ describe("record-promo dry-run end-to-end", () => {
     expect(
       manifest.phases.reduce((sum, p) => sum + p.events.length, 0),
     ).toBeGreaterThan(0);
+
+    // The character phase runs `gflow character create --project <pid>` and
+    // captures the generated face + triptych body images as artifacts.
+    const character = manifest.phases.find((p) => p.kind === "character")!;
+    expect(character.cmd).toContain("character create");
+    expect(character.cmd).toContain("--project");
+    expect(character.artifacts.length).toBeGreaterThan(0);
+    expect(
+      character.events.some((e) => e.event === "character.entity_created"),
+    ).toBe(true);
   }, 60_000);
 
   it("refuses to overwrite an existing run.json without --force", () => {
