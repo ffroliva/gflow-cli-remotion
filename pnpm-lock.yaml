@@ -26,6 +26,9 @@ importers:
       '@remotion/shapes':
         specifier: 4.0.467
         version: 4.0.467(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      mediabunny:
+        specifier: ^1.45.5
+        version: 1.45.5
       next:
         specifier: 16.2.3
         version: 16.2.3(@babel/core@7.29.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -2567,6 +2570,9 @@ packages:
 
   mediabunny@1.45.0:
     resolution: {integrity: sha512-oK3sMMYbucoF6LUX62L/2M9d+p9ve6KDQgL87kNfhsB0/XmTe9iRLUcgQgg9Gpgvi8Sb96zYfOUL6i17y0bdNg==}
+
+  mediabunny@1.45.5:
+    resolution: {integrity: sha512-hd/BqxYtis4A7hk6kFs0uHi4vFEvtraL8sClPINc6sEvWThdV0EgQbYW03Wz8//Y1hZjDSveq3Q42sSpcANCbw==}
 
   memfs@3.4.3:
     resolution: {integrity: sha512-eivjfi7Ahr6eQTn44nvTnR60e4a1Fs1Via2kCR5lHo/kyNoiMWaXCNJ/GpSd0ilXas2JSOl9B5FTIhflXu0hlg==}
@@ -5998,6 +6004,11 @@ snapshots:
   math-intrinsics@1.1.0: {}
 
   mediabunny@1.45.0:
+    dependencies:
+      '@types/dom-mediacapture-transform': 0.1.11
+      '@types/dom-webcodecs': 0.1.13
+
+  mediabunny@1.45.5:
     dependencies:
       '@types/dom-mediacapture-transform': 0.1.11
       '@types/dom-webcodecs': 0.1.13

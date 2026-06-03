@@ -12,6 +12,7 @@
     "@remotion/paths": "4.0.467",
     "@remotion/player": "4.0.467",
     "@remotion/shapes": "4.0.467",
+    "mediabunny": "^1.45.5",
     "next": "16.2.3",
     "obs-websocket-js": "5.0.8",
     "react": "19.2.3",

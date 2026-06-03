@@ -12,6 +12,14 @@ import {
   characterPromoSchema,
 } from "./promo/CharacterPromo";
 import {
+  CharacterCapturePromo,
+  characterCapturePromoSchema,
+  calculateCharacterCaptureMetadata,
+  INTRO_FRAMES,
+  OUTRO_FRAMES,
+  FALLBACK_CAPTURE_SECONDS,
+} from "./promo/CharacterCapturePromo";
+import {
   FPS,
   MASTER,
   SOCIAL,
@@ -120,6 +128,34 @@ export const RemotionRoot: React.FC = () => {
           }}
         />
       ))}
+      <Composition
+        id="CharacterCapturePromo"
+        component={CharacterCapturePromo}
+        // Placeholder duration; calculateMetadata overrides it with
+        // intro + real capture length + outro. The fallback here matches the
+        // probe-failure path so Studio shows a sane length before probing.
+        durationInFrames={
+          INTRO_FRAMES +
+          Math.ceil(FALLBACK_CAPTURE_SECONDS * FPS) +
+          OUTRO_FRAMES
+        }
+        fps={FPS}
+        width={SOCIAL.width}
+        height={SOCIAL.height}
+        schema={characterCapturePromoSchema}
+        calculateMetadata={calculateCharacterCaptureMetadata}
+        defaultProps={{
+          // PLACEHOLDER — swap for the real OBS master.mp4 capture of
+          // `gflow character create` (drop it in public/captures/ and point
+          // captureFile at it). This default is a committed copy of the
+          // already-rendered flex hook clip so the shell renders today.
+          captureFile: "captures/_placeholder-capture.mp4",
+          hookId: "flex",
+          hookTitle: undefined,
+          hookSubtitle: undefined,
+          ctaText: undefined,
+        }}
+      />
     </>
   );
 };
