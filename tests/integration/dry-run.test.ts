@@ -152,4 +152,57 @@ describe("record-promo dry-run end-to-end", () => {
     expect(runRecord(env, args).status).toBe(0);
     expect(runRecord(env, [...args, "--force"]).status).toBe(0);
   }, 90_000);
+
+  it("--phases character runs ONLY the character phase", () => {
+    const result = runRecord(env, [
+      "--profile",
+      "promo-smoke",
+      "--run-id",
+      env.runId,
+      "--dry-run",
+      "--phases",
+      "character",
+    ]);
+    expect(result.status, `stderr: ${result.stderr}`).toBe(0);
+
+    const runDir = join(env.outRoot, "gflow-output", "promo", env.runId);
+    const manifest = RunManifest.parse(
+      JSON.parse(readFileSync(join(runDir, "run.json"), "utf-8")),
+    );
+    expect(manifest.phases.map((p) => p.kind)).toEqual(["character"]);
+  }, 60_000);
+
+  it("--phases t2i,character runs both, in canonical order", () => {
+    const result = runRecord(env, [
+      "--profile",
+      "promo-smoke",
+      "--run-id",
+      env.runId,
+      "--dry-run",
+      // requested out of order on purpose
+      "--phases",
+      "character,t2i",
+    ]);
+    expect(result.status, `stderr: ${result.stderr}`).toBe(0);
+
+    const runDir = join(env.outRoot, "gflow-output", "promo", env.runId);
+    const manifest = RunManifest.parse(
+      JSON.parse(readFileSync(join(runDir, "run.json"), "utf-8")),
+    );
+    expect(manifest.phases.map((p) => p.kind)).toEqual(["t2i", "character"]);
+  }, 60_000);
+
+  it("exits non-zero on an unknown phase kind", () => {
+    const result = runRecord(env, [
+      "--profile",
+      "promo-smoke",
+      "--run-id",
+      env.runId,
+      "--dry-run",
+      "--phases",
+      "bogus",
+    ]);
+    expect(result.status).not.toBe(0);
+    expect(result.stderr + result.stdout).toMatch(/unknown phase kind/i);
+  }, 60_000);
 });

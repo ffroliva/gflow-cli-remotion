@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { PHASES } from "../../src/orchestrator/phases";
+import { PHASES, selectPhases } from "../../src/orchestrator/phases";
 
 describe("PHASES", () => {
   const ctx = {
@@ -58,6 +58,45 @@ describe("PHASES", () => {
     expect("batch-3.jpg").toMatch(PHASES[1]!.expectedArtifactGlob);
     expect("video.mp4").toMatch(PHASES[2]!.expectedArtifactGlob);
     expect("image-1.png").not.toMatch(PHASES[3]!.expectedArtifactGlob); // data: no artifacts
+  });
+
+  describe("selectPhases", () => {
+    it("returns all phases in canonical order when no kinds requested", () => {
+      expect(selectPhases().map((p) => p.kind)).toEqual([
+        "t2i",
+        "batch",
+        "video",
+        "data",
+        "character",
+      ]);
+      expect(selectPhases(undefined).map((p) => p.kind)).toEqual(
+        PHASES.map((p) => p.kind),
+      );
+    });
+
+    it("filters to a single requested kind", () => {
+      expect(selectPhases(["character"]).map((p) => p.kind)).toEqual([
+        "character",
+      ]);
+    });
+
+    it("filters to multiple requested kinds, preserving canonical order", () => {
+      // request out of order — result must still follow tour order
+      expect(selectPhases(["character", "t2i"]).map((p) => p.kind)).toEqual([
+        "t2i",
+        "character",
+      ]);
+    });
+
+    it("de-duplicates repeated kinds", () => {
+      expect(selectPhases(["t2i", "t2i"]).map((p) => p.kind)).toEqual(["t2i"]);
+    });
+
+    it("throws a clear error listing valid kinds on an unknown kind", () => {
+      expect(() => selectPhases(["bogus"])).toThrowError(/unknown phase/i);
+      expect(() => selectPhases(["bogus"])).toThrowError(/t2i/);
+      expect(() => selectPhases(["t2i", "nope"])).toThrowError(/nope/);
+    });
   });
 
   describe("character phase", () => {

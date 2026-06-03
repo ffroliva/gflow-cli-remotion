@@ -22,8 +22,10 @@ export interface PhaseContext {
    * Flow project id for the `character` phase. `gflow character create` cannot
    * run without it. Other phases ignore the field. In a dry-run the value is a
    * harmless placeholder; for a live recording the operator supplies a real
-   * project id via GFLOW_PROMO_PROJECT_ID (a preceding `gflow project create
-   * --json` is the recommended way to obtain one — see docs/RECORDING.md).
+   * project id via GFLOW_PROMO_PROJECT_ID — an EXISTING project id from `gflow
+   * data list projects` on the promo profile (there is no standalone
+   * project-create command; a project is otherwise auto-created by an
+   * image/video generation — see docs/RECORDING.md).
    */
   projectId: string;
 }
@@ -123,3 +125,31 @@ export const PHASES: readonly PhaseDef[] = [
     expectedArtifactGlob: /\.(png|jpe?g)$/i,
   },
 ];
+
+/** Every valid phase kind, in canonical tour order. */
+export const PHASE_KINDS: readonly PhaseKind[] = PHASES.map((p) => p.kind);
+
+/**
+ * Resolve which phases a run should execute.
+ *
+ * - `kinds` undefined/empty → all phases (default tour, unchanged behaviour).
+ * - Otherwise → only the requested kinds, de-duplicated and returned in the
+ *   canonical PHASES order (so `--phases character,t2i` still runs t2i first).
+ *
+ * Throws on any unknown kind with a message listing the valid kinds, so the
+ * CLI can surface it and exit non-zero rather than silently running nothing.
+ */
+export function selectPhases(kinds?: readonly string[]): readonly PhaseDef[] {
+  if (!kinds || kinds.length === 0) {
+    return PHASES;
+  }
+  for (const k of kinds) {
+    if (!PHASE_KINDS.includes(k as PhaseKind)) {
+      throw new Error(
+        `unknown phase kind '${k}'. Valid kinds: ${PHASE_KINDS.join(", ")}`,
+      );
+    }
+  }
+  const requested = new Set(kinds);
+  return PHASES.filter((p) => requested.has(p.kind));
+}
