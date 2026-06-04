@@ -145,13 +145,13 @@ export const RemotionRoot: React.FC = () => {
         schema={characterCapturePromoSchema}
         calculateMetadata={calculateCharacterCaptureMetadata}
         defaultProps={{
-          // PLACEHOLDER — swap for the real OBS master.mp4 capture of
-          // `gflow character create` (drop it in public/captures/ and point
-          // captureFile at it). The capture pipeline (record-promo + obs
-          // relocation) is wired and verified, but a clean capture environment
-          // is required: OBS must capture gflow's headed Chrome window, on a
-          // desktop with no private content. See docs/RECORDING.md.
-          captureFile: "captures/_placeholder-capture.mp4",
+          // Real browser-only capture of the Flow character editor showing the
+          // generated "Marina" character (consistent face references). Recorded
+          // via gflow-cli's dev-scoped Playwright harness
+          // (scripts/dev/record_flow_capture.py) using Playwright's native
+          // record_video_dir — captures only the page (no desktop), language/OS
+          // agnostic. ~28s, 1280x720, letterboxed into 9:16 by the shell.
+          captureFile: "captures/character-master.mp4",
           hookId: "flex",
           hookTitle: undefined,
           hookSubtitle: undefined,
