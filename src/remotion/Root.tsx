@@ -17,7 +17,7 @@ import {
   calculateCharacterCaptureMetadata,
   INTRO_FRAMES,
   OUTRO_FRAMES,
-  FALLBACK_CAPTURE_SECONDS,
+  CREATION_FRAMES,
 } from "./promo/CharacterCapturePromo";
 import {
   FPS,
@@ -131,25 +131,18 @@ export const RemotionRoot: React.FC = () => {
       <Composition
         id="CharacterCapturePromo"
         component={CharacterCapturePromo}
-        // Placeholder duration; calculateMetadata overrides it with
-        // intro + real capture length + outro. The fallback here matches the
-        // probe-failure path so Studio shows a sane length before probing.
-        durationInFrames={
-          INTRO_FRAMES +
-          Math.ceil(FALLBACK_CAPTURE_SECONDS * FPS) +
-          OUTRO_FRAMES
-        }
+        // Fixed: intro + the still sequence + outro (no video probe needed).
+        durationInFrames={INTRO_FRAMES + CREATION_FRAMES + OUTRO_FRAMES}
         fps={FPS}
         width={SOCIAL.width}
         height={SOCIAL.height}
         schema={characterCapturePromoSchema}
         calculateMetadata={calculateCharacterCaptureMetadata}
         defaultProps={{
-          // Real capture of gflow's genuine character-creation flow: name typed
-          // -> Generate -> the face appears in the editor (image/free). Produced
-          // by gflow-cli scripts/dev/record_flow_capture.py (PR #158); the clip
-          // shows "Marina" typed + the generated face. 36.7s / 1280x720.
-          captureFile: "captures/character-master.mp4",
+          // A frame-driven still sequence of the REAL Flow character editor
+          // (clean frames from a free `gflow character create` run): empty
+          // editor -> generating -> the generated face revealed -> hero. No
+          // video playback, so no scroll-bounce. See CharacterCapturePromo.
           hookId: "flex",
           hookTitle: undefined,
           hookSubtitle: undefined,
