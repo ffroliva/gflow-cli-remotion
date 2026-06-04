@@ -145,13 +145,11 @@ export const RemotionRoot: React.FC = () => {
         schema={characterCapturePromoSchema}
         calculateMetadata={calculateCharacterCaptureMetadata}
         defaultProps={{
-          // PLACEHOLDER. The first Playwright capture only showed the project
-          // gallery (not the creation flow) and is not shippable. A clean
-          // recorder that drives gflow's REAL character-creation flow (type
-          // prompt -> Generate -> face appears, image/free) is being built in
-          // gflow-cli (dev-scoped recording infra; see that repo's plan).
-          // Swap captureFile to the new master.mp4 once that capture exists.
-          captureFile: "captures/_placeholder-capture.mp4",
+          // Real capture of gflow's genuine character-creation flow: name typed
+          // -> Generate -> the face appears in the editor (image/free). Produced
+          // by gflow-cli scripts/dev/record_flow_capture.py (PR #158); the clip
+          // shows "Marina" typed + the generated face. 36.7s / 1280x720.
+          captureFile: "captures/character-master.mp4",
           hookId: "flex",
           hookTitle: undefined,
           hookSubtitle: undefined,
