@@ -11,10 +11,16 @@
  * Usage:
  *   pnpm record-promo --profile promo-denon82 --run-id YYYY-MM-DD-001
  *   pnpm record-promo --profile promo-test --dry-run
+ *   pnpm record-promo --profile promo-denon82 --run-id YYYY-MM-DD-001 --phases character
+ *
+ * --phases takes a comma-separated list of phase kinds (t2i,batch,video,data,
+ * character). Omit it to run the full tour. Restricting to a subset lets a live
+ * recording capture only the phase(s) you need without spending credits on the
+ * rest.
  */
 
 import { spawn } from "node:child_process";
-import { mkdirSync, readdirSync } from "node:fs";
+import { mkdirSync, readdirSync, copyFileSync, existsSync } from "node:fs";
 import { hrtime } from "node:process";
 import { join } from "node:path";
 import { parseArgs } from "node:util";
@@ -29,7 +35,7 @@ import { scrubEnv } from "../src/orchestrator/env-scrub";
 import { parseEventStream } from "../src/orchestrator/event-stream";
 import { verifyChromeProfile } from "../src/orchestrator/profile-check";
 import { writeManifest } from "../src/orchestrator/manifest";
-import { PHASES } from "../src/orchestrator/phases";
+import { PHASES, selectPhases } from "../src/orchestrator/phases";
 import { resolveOutRoot } from "../src/orchestrator/run-paths";
 import { RunManifest } from "../types/schema";
 
@@ -39,6 +45,7 @@ interface CliValues {
   prompt: string;
   "dry-run": boolean;
   force: boolean;
+  phases?: string;
 }
 
 const { values: rawValues } = parseArgs({
@@ -51,6 +58,7 @@ const { values: rawValues } = parseArgs({
     },
     "dry-run": { type: "boolean", default: false },
     force: { type: "boolean", default: false },
+    phases: { type: "string" },
   },
 });
 const values = rawValues as Partial<CliValues>;
@@ -73,6 +81,49 @@ const dryRun = values["dry-run"] ?? false;
 const force = values.force ?? false;
 const prompt = values.prompt!;
 const runId = values["run-id"] ?? ulid();
+
+// Resolve which phases to run. `--phases t2i,character` restricts the tour;
+// omitting it runs the full canonical tour. An unknown kind is a hard error.
+const requestedPhaseKinds = values.phases
+  ? values.phases
+      .split(",")
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0)
+  : undefined;
+let selectedPhases;
+try {
+  selectedPhases = selectPhases(requestedPhaseKinds);
+} catch (err) {
+  console.error((err as Error).message);
+  process.exit(2);
+}
+
+/**
+ * Flow project id threaded into the `character` phase — `gflow character
+ * create` cannot run without `--project <pid>`. There is no standalone
+ * project-create command: a project is auto-created by an image/video
+ * generation, and existing project ids are listed by `gflow data list
+ * projects` on the promo profile. For a live recording the operator exports a
+ * real id as GFLOW_PROMO_PROJECT_ID. In a dry-run the stub ignores the value,
+ * so a stable placeholder keeps the command line deterministic for the
+ * manifest.
+ */
+const projectId =
+  process.env.GFLOW_PROMO_PROJECT_ID ?? (dryRun ? "promo-dryrun-project" : "");
+// Only the `character` phase needs a project id, so only fail when it is
+// actually part of this run.
+const runsCharacter = selectedPhases.some((p) => p.kind === "character");
+if (!dryRun && runsCharacter && !projectId) {
+  console.error(
+    "GFLOW_PROMO_PROJECT_ID is required for a live recording (the 'character' " +
+      "phase needs --project). Set it to an EXISTING project id: run " +
+      "`gflow data list projects` on the promo profile and export one, e.g. " +
+      "GFLOW_PROMO_PROJECT_ID=<id>. (There is no standalone project-create " +
+      "command; a project is otherwise auto-created by an image/video " +
+      "generation.)",
+  );
+  process.exit(2);
+}
 
 /**
  * Resolve gflow-cli's profile root in a way that mirrors Python platformdirs
@@ -149,8 +200,8 @@ const phaseRecords: Array<{
 }> = [];
 
 let aborted = false;
-for (const phase of PHASES) {
-  const args = phase.args({ prompt, profile, outDir: outRoot });
+for (const phase of selectedPhases) {
+  const args = phase.args({ prompt, profile, outDir: outRoot, projectId });
   const cmdLine = `${phase.cmd} ${args.join(" ")}`;
 
   // Dry-run: invoke the per-kind stub instead of real gflow.
@@ -220,8 +271,21 @@ for (const phase of PHASES) {
   }
 }
 
-await obs.stopRecording();
+const recordedPath = await obs.stopRecording();
 await obs.disconnect();
+
+// OBS writes to its own configured recording folder (Simple-mode FilePath),
+// not the path we request at start. Relocate the actual file to masterPath so
+// the manifest's masterPath is truthful and the asset lives with the run.
+// Non-destructive: we copy (leaving OBS's original) rather than move.
+if (recordedPath && recordedPath !== masterPath && existsSync(recordedPath)) {
+  copyFileSync(recordedPath, masterPath);
+  console.log(`✓ relocated OBS recording → ${masterPath}`);
+} else if (!dryRun && !existsSync(masterPath)) {
+  console.error(
+    `⚠  OBS reported no recording file (got "${recordedPath}"); master.mp4 missing`,
+  );
+}
 
 const manifest = RunManifest.parse({
   schemaVersion: 1,

@@ -55,12 +55,7 @@
         "properties": {
           "kind": {
             "type": "string",
-            "enum": [
-              "t2i",
-              "batch",
-              "video",
-              "data"
-            ]
+            "enum": ["t2i", "batch", "video", "data", "character"]
           },
           "cmd": {
             "type": "string"
@@ -109,12 +104,7 @@
                   "additionalProperties": {}
                 }
               },
-              "required": [
-                "ts",
-                "event",
-                "level",
-                "data"
-              ],
+              "required": ["ts", "event", "level", "data"],
               "additionalProperties": false
             }
           }

@@ -14,7 +14,7 @@
 import { redactDeep } from "./redact";
 
 const ALLOW_RE =
-  /^(ui_automation|ui_automation_video|image_batch|reference_attached|error_raised)/;
+  /^(ui_automation|ui_automation_video|image_batch|character|reference_attached|error_raised)/;
 
 export interface EventEnvelope {
   ts: string;

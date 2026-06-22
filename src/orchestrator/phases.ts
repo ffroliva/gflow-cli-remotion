@@ -1,10 +1,15 @@
 /**
- * The 4-phase promo tour: t2i → batch → video → data.
+ * The 5-phase promo tour: t2i → batch → video → data → character.
  *
  * Each phase carries the cmd/args template, a maxDurationMs hard cap
  * (defence against a hung Flow request bleeding the whole run), and a
  * regex matching the artifacts the orchestrator should pick up from
  * outDir after the phase exits cleanly.
+ *
+ * The `character` phase is special: `gflow character create` REQUIRES a
+ * `--project <pid>` — Characters are per-project Flow entities. The
+ * orchestrator resolves a project id once (see record-promo.mts) and threads
+ * it through PhaseContext.projectId so the same value reaches the wire command.
  */
 
 import type { PhaseKind } from "../../types/schema";
@@ -13,6 +18,16 @@ export interface PhaseContext {
   prompt: string;
   profile: string;
   outDir: string;
+  /**
+   * Flow project id for the `character` phase. `gflow character create` cannot
+   * run without it. Other phases ignore the field. In a dry-run the value is a
+   * harmless placeholder; for a live recording the operator supplies a real
+   * project id via GFLOW_PROMO_PROJECT_ID — an EXISTING project id from `gflow
+   * data list projects` on the promo profile (there is no standalone
+   * project-create command; a project is otherwise auto-created by an
+   * image/video generation — see docs/RECORDING.md).
+   */
+  projectId: string;
 }
 
 export interface PhaseDef {
@@ -80,4 +95,69 @@ export const PHASES: readonly PhaseDef[] = [
     maxDurationMs: 30_000,
     expectedArtifactGlob: /^$/, // stdout-only; no artifacts written
   },
+  {
+    // `gflow character create` builds a reusable Character entity: a face
+    // reference (slot 0) plus a front/side/back triptych body (slot 1), bound
+    // to the project. Two image generations → the longest non-video phase.
+    kind: "character",
+    cmd: "gflow",
+    // NOTE: `gflow character create` (0.12.0) has no `--out` flag — it persists
+    // reference images into the entity/data store, not a local dir. The promo
+    // asset for this phase is the OBS `master.mp4`, so no per-phase artifact is
+    // expected on disk (expectedArtifactGlob below matches nothing).
+    args: ({ profile, projectId }) => [
+      "character",
+      "create",
+      "--project",
+      projectId,
+      "--name",
+      "Marina",
+      "--face-prompt",
+      "a woman with short dark hair, round glasses, navy sweater, soft studio portrait",
+      "--voice",
+      "Kore",
+      "--personality",
+      "calm, precise, dry wit",
+      "--model",
+      "nano2",
+      "--profile",
+      profile,
+      // denon82 is a pt-locale Google account. Flow's editor URL locale path
+      // segment is a SHORT code (/fx/pt/...), not BCP-47 — passing the default
+      // "en-US" builds /fx/en-US/... which 404s and redirects to /fx/pt/404.
+      // "pt" matches the account and is verified to enter the editor.
+      "--locale",
+      "pt",
+    ],
+    maxDurationMs: 360_000,
+    expectedArtifactGlob: /^$/, // gflow writes no local file; OBS master.mp4 is the asset
+  },
 ];
+
+/** Every valid phase kind, in canonical tour order. */
+export const PHASE_KINDS: readonly PhaseKind[] = PHASES.map((p) => p.kind);
+
+/**
+ * Resolve which phases a run should execute.
+ *
+ * - `kinds` undefined/empty → all phases (default tour, unchanged behaviour).
+ * - Otherwise → only the requested kinds, de-duplicated and returned in the
+ *   canonical PHASES order (so `--phases character,t2i` still runs t2i first).
+ *
+ * Throws on any unknown kind with a message listing the valid kinds, so the
+ * CLI can surface it and exit non-zero rather than silently running nothing.
+ */
+export function selectPhases(kinds?: readonly string[]): readonly PhaseDef[] {
+  if (!kinds || kinds.length === 0) {
+    return PHASES;
+  }
+  for (const k of kinds) {
+    if (!PHASE_KINDS.includes(k as PhaseKind)) {
+      throw new Error(
+        `unknown phase kind '${k}'. Valid kinds: ${PHASE_KINDS.join(", ")}`,
+      );
+    }
+  }
+  const requested = new Set(kinds);
+  return PHASES.filter((p) => requested.has(p.kind));
+}

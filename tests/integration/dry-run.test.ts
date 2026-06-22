@@ -1,6 +1,13 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync, rmSync } from "node:fs";
+import {
+  mkdtempSync,
+  mkdirSync,
+  writeFileSync,
+  readFileSync,
+  existsSync,
+  rmSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { RunManifest } from "../../types/schema";
@@ -14,7 +21,9 @@ interface RunEnv {
   envExtra: Record<string, string>;
 }
 
-function setupHermeticEnv(opts: { markerContent?: string | null } = {}): RunEnv {
+function setupHermeticEnv(
+  opts: { markerContent?: string | null } = {},
+): RunEnv {
   const profileRoot = mkdtempSync(join(tmpdir(), "promo-pr-"));
   const profileDir = join(profileRoot, "profile_promo-smoke");
   mkdirSync(profileDir, { recursive: true });
@@ -72,7 +81,7 @@ describe("record-promo dry-run end-to-end", () => {
     rmSync(env.outRoot, { recursive: true, force: true });
   });
 
-  it("produces a valid run.json after a 4-phase dry-run tour", () => {
+  it("produces a valid run.json after a 5-phase dry-run tour", () => {
     const result = runRecord(env, [
       "--profile",
       "promo-smoke",
@@ -90,12 +99,13 @@ describe("record-promo dry-run end-to-end", () => {
     );
     expect(manifest.runId).toBe(env.runId);
     expect(manifest.profile).toBe("promo-smoke");
-    expect(manifest.phases).toHaveLength(4);
+    expect(manifest.phases).toHaveLength(5);
     expect(manifest.phases.map((p) => p.kind)).toEqual([
       "t2i",
       "batch",
       "video",
       "data",
+      "character",
     ]);
     for (const p of manifest.phases) {
       expect(p.exitCode).toBe(0);
@@ -105,6 +115,19 @@ describe("record-promo dry-run end-to-end", () => {
     expect(
       manifest.phases.reduce((sum, p) => sum + p.events.length, 0),
     ).toBeGreaterThan(0);
+
+    // The character phase runs `gflow character create --project <pid>`. gflow
+    // persists the face + triptych body into the entity/data store — it writes
+    // no local file (no `--out` flag), so the phase reports zero on-disk
+    // artifacts; the OBS master.mp4 is the captured asset.
+    const character = manifest.phases.find((p) => p.kind === "character")!;
+    expect(character.cmd).toContain("character create");
+    expect(character.cmd).toContain("--project");
+    expect(character.cmd).not.toContain("--out");
+    expect(character.artifacts).toEqual([]);
+    expect(
+      character.events.some((e) => e.event === "character.entity_created"),
+    ).toBe(true);
   }, 60_000);
 
   it("refuses to overwrite an existing run.json without --force", () => {
@@ -132,4 +155,57 @@ describe("record-promo dry-run end-to-end", () => {
     expect(runRecord(env, args).status).toBe(0);
     expect(runRecord(env, [...args, "--force"]).status).toBe(0);
   }, 90_000);
+
+  it("--phases character runs ONLY the character phase", () => {
+    const result = runRecord(env, [
+      "--profile",
+      "promo-smoke",
+      "--run-id",
+      env.runId,
+      "--dry-run",
+      "--phases",
+      "character",
+    ]);
+    expect(result.status, `stderr: ${result.stderr}`).toBe(0);
+
+    const runDir = join(env.outRoot, "gflow-output", "promo", env.runId);
+    const manifest = RunManifest.parse(
+      JSON.parse(readFileSync(join(runDir, "run.json"), "utf-8")),
+    );
+    expect(manifest.phases.map((p) => p.kind)).toEqual(["character"]);
+  }, 60_000);
+
+  it("--phases t2i,character runs both, in canonical order", () => {
+    const result = runRecord(env, [
+      "--profile",
+      "promo-smoke",
+      "--run-id",
+      env.runId,
+      "--dry-run",
+      // requested out of order on purpose
+      "--phases",
+      "character,t2i",
+    ]);
+    expect(result.status, `stderr: ${result.stderr}`).toBe(0);
+
+    const runDir = join(env.outRoot, "gflow-output", "promo", env.runId);
+    const manifest = RunManifest.parse(
+      JSON.parse(readFileSync(join(runDir, "run.json"), "utf-8")),
+    );
+    expect(manifest.phases.map((p) => p.kind)).toEqual(["t2i", "character"]);
+  }, 60_000);
+
+  it("exits non-zero on an unknown phase kind", () => {
+    const result = runRecord(env, [
+      "--profile",
+      "promo-smoke",
+      "--run-id",
+      env.runId,
+      "--dry-run",
+      "--phases",
+      "bogus",
+    ]);
+    expect(result.status).not.toBe(0);
+    expect(result.stderr + result.stdout).toMatch(/unknown phase kind/i);
+  }, 60_000);
 });
