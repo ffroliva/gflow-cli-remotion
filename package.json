@@ -37,6 +37,7 @@
     "dotenv": "17.3.1",
     "eslint": "9.19.0",
     "eslint-config-next": "16.2.3",
+    "playwright": "^1.61.0",
     "prettier": "3.8.1",
     "tsx": "4.22.3",
     "typescript": "5.9.3",
@@ -56,6 +57,7 @@
     "test:contract": "vitest run tests/contract",
     "test:render-smoke": "vitest run tests/render-smoke",
     "record-promo": "tsx scripts/record-promo.mts",
+    "record-character-editor": "tsx scripts/record-character-editor.mts",
     "render-matrix": "tsx scripts/render-matrix.mts",
     "post-gif": "tsx scripts/post-gif.mts"
   },
