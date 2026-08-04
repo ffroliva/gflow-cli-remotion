@@ -1,0 +1,38 @@
+# Dependabot — dependency and security updates.
+#
+# Two layers, and they are not the same thing:
+#
+#   1. Dependabot security ALERTS + automated security fixes (repo Settings ->
+#      Code security). GitHub-native, consume no Actions minutes, and report a
+#      CVE whether or not this file exists. Those were DISABLED on 28 of 29
+#      repos across these orgs until 2026-08-04, which is why GHSA-9qr9-h5gf-34mp
+#      (Next.js RCE, the ClickFix/EtherHiding root-cause candidate) sat unpatched
+#      for eight days in the repo serving video.compiledgrowth.com.
+#
+#   2. This file — version updates, which keep dependencies from drifting so far
+#      that the eventual security bump is also a breaking upgrade.
+#
+# Keep both on. Neither substitutes for the other.
+
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    labels: ["dependencies", "javascript"]
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      # Group routine bumps so they never drown out a security PR.
+      minor-and-patch:
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels: ["dependencies", "ci"]
+    commit-message:
+      prefix: "ci(deps)"
