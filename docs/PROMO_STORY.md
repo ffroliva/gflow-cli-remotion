@@ -97,6 +97,26 @@ audience decides you are selling something.
 
 ---
 
+## Running it
+
+```bash
+./scripts/capture-story.sh <profile> [outdir]
+```
+
+Start OBS recording **before** invoking it and stop after. The script does not
+drive OBS deliberately — `phases.ts` has no `character` phase and beat 3 is the
+whole point, so the capture is manual by design until that changes.
+
+> **Check the session first.** `gflow auth list` reports `present` for a saved
+> session *file*, which is not the same as a valid one — an expired session
+> still reads `present` and fails at project creation with `AuthExpiredError`
+> (exit 3). Run beat 1 by hand before starting OBS, so a dead session does not
+> cost you a take. Refresh with `gflow auth login --profile <name>`, which is
+> interactive and opens a browser.
+
+Images are credit-free — only Veo video spends credits — so a botched take
+costs time, not money. Re-run it.
+
 ## What this needs that the current phases do not
 
 `phases.ts` has no `character` phase, so beat 3 cannot be driven by the
