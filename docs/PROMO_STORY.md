@@ -130,3 +130,38 @@ workflow complaint: `scene-seven`, `same-face`, `who-is-this`. The existing six
 still work for a feature-tour cut and are left in place — the render matrix
 fans across all of them, so the story is A/B-tested against the pain-point
 angle instead of replacing it on assertion.
+
+### Which to shoot — decided 2026-08-05
+
+All three were rendered as 1080×1920 stills and compared side by side.
+
+**`scene-seven` leads.** It is the only one that makes the viewer *feel* the
+problem before naming it: "Scene 7" implies a project already six shots deep,
+so the failure lands as a loss rather than as a feature gap. It is also the
+shortest title, so it renders largest — which is what matters at thumb
+distance.
+
+**`same-face` is the A/B partner.** It is the variant that survives without the
+video: read cold as a still, "Same character. Every scene." still communicates
+the product, where "Scene 7. Different face." is cryptic without the footage
+that follows. Worth running against `scene-seven` precisely because it fails
+differently.
+
+**`who-is-this` is out of rotation.** "AI forgets" is vague, and the subtitle
+spends its length naming a feature (`gflow character`) instead of paying off
+the hook. Kept in `hooks.ts` rather than deleted — an unused variant costs
+nothing and the matrix can be pointed at it later — but it is not part of the
+first cut.
+
+### Render note
+
+The stills were produced with:
+
+```bash
+npx remotion still PromoSocial out/hooks/<id>.png --frame=45 \
+  --props='{"runDir":"","hookTitle":"…","hookSubtitle":"…"}'
+```
+
+Passing props through PowerShell flattened the em-dash in `same-face` to a
+hyphen. `types/hooks.ts` is correct; only the still was affected. Verify the
+dash survives in the real render rather than trusting the preview.
