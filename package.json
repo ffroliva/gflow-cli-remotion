@@ -26,7 +26,7 @@
     "@next/eslint-plugin-next": "16.2.3",
     "@remotion/eslint-plugin": "4.0.506",
     "@remotion/renderer": "4.0.506",
-    "@types/node": "^20.19.0",
+    "@types/node": "^26.1.2",
     "@types/react": "19.2.7",
     "@types/react-dom": "19.2.3",
     "@types/web": "0.0.166",
