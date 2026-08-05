@@ -1,0 +1,142 @@
+/**
+ * Catalog of PUBLISHED promo assets.
+ *
+ * The pipeline already records how an asset was *made*: `RunManifest`
+ * (`types/schema.ts`) captures a recording session, and `Hook` (`types/hooks.ts`)
+ * captures the A/B variants a render fans out to. Neither records what happened
+ * afterwards — which renders were kept, where the file ended up, and which
+ * channel it is live on. That knowledge lived only in the operator's head, so
+ * every launch re-derived it: at the 2026-08-05 v0.51.0 promo push, three assets
+ * existed, only two were listed in `gflow-cli/docs/DEMOS.md`, and nothing
+ * recorded that a 1080×1920 vertical composition was already built but had never
+ * been rendered.
+ *
+ * This file closes that loop. It is the answer to "what promo material do we
+ * have, what produced it, and can I reuse it?"
+ *
+ * Reuse is the point. Before commissioning a new recording session, check here:
+ * an existing `master` can be re-cut into a new format without re-capturing
+ * Flow, and a `sourceComposition` + `sourceRunId` pair is enough to re-render
+ * with a different hook.
+ *
+ * Invariants are enforced by `tests/unit/catalog.test.ts`.
+ */
+
+/** Where an asset is published. An asset may serve several channels. */
+export type Channel =
+  | "readme" // inline in gflow-cli/README.md
+  | "demos" // gflow-cli/docs/DEMOS.md gallery
+  | "linkedin"
+  | "reddit"
+  | "facebook"
+  | "x"
+  | "youtube-shorts"
+  | "tiktok";
+
+export type AssetKind = "video" | "gif" | "image";
+
+export interface PromoAsset {
+  /** Stable kebab-case identifier. Never reuse or renumber. */
+  id: string;
+  kind: AssetKind;
+  /** Repo-relative path, or an absolute URL for release-hosted assets. */
+  location: string;
+  width: number;
+  height: number;
+  /** Seconds. `null` for stills. */
+  durationSec: number | null;
+  bytes: number;
+  /**
+   * Composition in `src/remotion/Root.tsx` this came from, or `null` when the
+   * asset predates the pipeline / was produced another way. `null` is a real
+   * answer, not a gap to paper over — it means "cannot be re-rendered from a
+   * composition, would need re-capture".
+   */
+  sourceComposition: "PromoMaster" | "PromoSocial" | "ReadmeLoop" | null;
+  /** `RunManifest.runId` that produced it. `null` when unrecorded. */
+  sourceRunId: string | null;
+  /** `Hook.id` used for the opening, when the composition takes one. */
+  hookId: string | null;
+  channels: Channel[];
+  /** ISO date the asset was produced or first published. */
+  addedIso: string;
+  /** One line: what a viewer actually sees. */
+  description: string;
+}
+
+/**
+ * BACKFILLED 2026-08-05 from the assets committed in `gflow-cli/docs/assets/`.
+ * Dimensions, duration and byte sizes were measured from the files themselves.
+ *
+ * `sourceRunId` is `null` on all three: these predate the catalog and their
+ * originating runs were never recorded. That is deliberately visible rather
+ * than guessed — an invented run id would be worse than an honest gap, because
+ * it would look re-renderable when it is not.
+ */
+export const catalog: PromoAsset[] = [
+  {
+    id: "demo-split-pf",
+    kind: "gif",
+    location: "https://github.com/ffroliva/gflow-cli/blob/main/docs/assets/demo-split-pf.gif",
+    width: 600,
+    height: 338,
+    durationSec: 15.0,
+    bytes: 757_102,
+    sourceComposition: null,
+    sourceRunId: null,
+    hookId: null,
+    channels: ["demos", "linkedin", "reddit"],
+    addedIso: "2026-08-05",
+    description:
+      "Split-screen 16:9: the command is typed on a full terminal, then the Flow browser slides in and the image resolves. Strongest single asset — shows the CLI and the UI doing the work in one frame.",
+  },
+  {
+    id: "example-run",
+    kind: "gif",
+    location: "https://github.com/ffroliva/gflow-cli/blob/main/docs/assets/example-run.gif",
+    width: 800,
+    height: 450,
+    durationSec: 16.7,
+    bytes: 1_187_030,
+    sourceComposition: null,
+    sourceRunId: null,
+    hookId: null,
+    channels: ["demos"],
+    addedIso: "2026-08-05",
+    description:
+      "Terminal only, 16:9: a single `gflow image t2i` run with streaming output and the PNG landing on disk.",
+  },
+  {
+    id: "examples-grid",
+    kind: "image",
+    location: "https://github.com/ffroliva/gflow-cli/blob/main/docs/assets/examples.webp",
+    width: 1499,
+    height: 460,
+    durationSec: null,
+    bytes: 59_994,
+    sourceComposition: null,
+    sourceRunId: null,
+    hookId: null,
+    channels: ["readme"],
+    addedIso: "2026-08-05",
+    description:
+      "Static output grid: text-to-image results plus a before/after frame transform. Embedded in the gflow-cli README hero.",
+  },
+];
+
+/** Assets serving a given channel. */
+export function byChannel(channel: Channel): PromoAsset[] {
+  return catalog.filter((a) => a.channels.includes(channel));
+}
+
+/**
+ * Formats NOT yet represented in the catalog, per aspect ratio.
+ *
+ * The gap this surfaces today: every catalogued asset is landscape. `PromoSocial`
+ * (1080×1920) has been built since the pipeline shipped and has never produced a
+ * committed asset — so any vertical-first channel (TikTok, Shorts, Facebook
+ * mobile feed) currently has nothing to post.
+ */
+export function missingVertical(): boolean {
+  return !catalog.some((a) => a.height > a.width);
+}
