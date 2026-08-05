@@ -56,4 +56,30 @@ export const hooks: readonly Hook[] = [
     subtitle: "gflow image batch.",
     durationMs: 2500,
   },
+
+  // ── Story hooks (docs/PROMO_STORY.md) ─────────────────────────────────────
+  // The six above open on a workflow complaint: clicking, dragging, counting
+  // clicks. That lands with people already using Flow heavily. These three open
+  // on the CONSISTENCY problem instead — the wall you hit the moment you try to
+  // make anything longer than a single shot, and the one thing a chat box
+  // genuinely cannot do. Kept alongside rather than replacing, so the matrix
+  // A/B-tests the two angles instead of assuming this one wins.
+  {
+    id: "scene-seven",
+    title: "Scene 7. Different face.",
+    subtitle: "Every AI image tool does this. Here is the fix.",
+    durationMs: 2500,
+  },
+  {
+    id: "same-face",
+    title: "Same character. Every scene.",
+    subtitle: "Not one at a time — in a loop, from your terminal.",
+    durationMs: 2500,
+  },
+  {
+    id: "who-is-this",
+    title: "Who is this? Not your hero.",
+    subtitle: "AI forgets. gflow character makes it remember.",
+    durationMs: 2500,
+  },
 ];
