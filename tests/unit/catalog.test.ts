@@ -116,10 +116,14 @@ describe("catalog", () => {
     expect(readyToRender().every((c) => c.blockedOn === null)).toBe(true);
   });
 
-  it("reports the vertical-format gap", () => {
-    // Documents today's real state rather than asserting an aspiration: every
-    // catalogued asset is landscape, while PromoSocial (1080×1920) exists and
-    // has never shipped output. Flip this expectation when that changes.
-    expect(missingVertical()).toBe(true);
+  it("has vertical assets", () => {
+    // Flipped 2026-08-05: was `true` when every catalogued asset was landscape.
+    // The nine 1080×1920 hook cards closed it.
+    //
+    // Read this narrowly. It says a vertical asset EXISTS, not that the
+    // vertical promo is done — those cards are stills of a 2.5s hook, and the
+    // 60s video cut is still waiting on a capture. `compositions[].blockedOn`
+    // is where that distinction lives; this helper only knows aspect ratio.
+    expect(missingVertical()).toBe(false);
   });
 });
