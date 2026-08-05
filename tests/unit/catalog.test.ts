@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { catalog, byChannel, missingVertical } from "../../types/catalog";
+import {
+  catalog,
+  byChannel,
+  missingVertical,
+  compositions,
+  readyToRender,
+} from "../../types/catalog";
 import { hooks } from "../../types/hooks";
 
 describe("catalog", () => {
@@ -82,6 +88,32 @@ describe("catalog", () => {
       true,
     );
     expect(byChannel("demos").length).toBeGreaterThan(0);
+  });
+
+  it("shipped status agrees with the catalog", () => {
+    // The two halves must not drift: a composition claiming `shipped: true`
+    // with no catalogued asset naming it — or the reverse — means one of them
+    // was updated and the other forgotten, which is exactly how the operator's
+    // mental model got out of sync in the first place.
+    for (const c of compositions) {
+      const produced = catalog.some((a) => a.sourceComposition === c.id);
+      expect(c.shipped, `${c.id}.shipped disagrees with the catalog`).toBe(
+        produced,
+      );
+    }
+  });
+
+  it("an unshipped composition says what blocks it", () => {
+    // "Not shipped, reason unknown" is the state this file exists to abolish.
+    for (const c of compositions) {
+      if (!c.shipped) {
+        expect(c.blockedOn, `${c.id} is unshipped with no blocker`).toBeTruthy();
+      }
+    }
+  });
+
+  it("readyToRender returns only unblocked compositions", () => {
+    expect(readyToRender().every((c) => c.blockedOn === null)).toBe(true);
   });
 
   it("reports the vertical-format gap", () => {
