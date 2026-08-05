@@ -130,12 +130,86 @@ export function byChannel(channel: Channel): PromoAsset[] {
 }
 
 /**
+ * Production capability, as distinct from published output.
+ *
+ * The catalog above answers "what do we have?". This answers the other half of
+ * the question: "what could we make, and what does it need?" — so a new promo
+ * starts from what is already buildable instead of from a blank commission.
+ *
+ * The distinction earned itself immediately: `PromoSocial` was proposed as new
+ * work during the v0.51.0 push when it had existed all along and needed only a
+ * capture. Recording that a composition exists but has never shipped is the
+ * whole point.
+ */
+export interface CompositionStatus {
+  id: "PromoMaster" | "PromoSocial" | "ReadmeLoop";
+  width: number;
+  height: number;
+  /** Composition length as registered in `src/remotion/Root.tsx`. */
+  durationSec: number;
+  /** Has any catalogued asset been produced from it? */
+  shipped: boolean;
+  /** What is required before it can produce an asset. `null` when nothing is. */
+  blockedOn: string | null;
+  notes: string;
+}
+
+/**
+ * VERIFIED 2026-08-05. `PromoSocial` was rendered to a still
+ * (`npx remotion still PromoSocial --frame=45 --props='{"runDir":""}'`) and
+ * produced a clean 1080×1920 hook card, so the composition is sound. What none
+ * of the three can do is produce a *usable* asset, because every one of them
+ * mounts `OffthreadVideo src={staticFile("master.mp4")}` and there is no
+ * `master.mp4` in `public/`.
+ *
+ * That is a one-capture blocker, not a build blocker — an important difference
+ * when scoping a promo push.
+ */
+export const compositions: CompositionStatus[] = [
+  {
+    id: "PromoMaster",
+    width: 1920,
+    height: 1080,
+    durationSec: 90,
+    shipped: false,
+    blockedOn: "public/master.mp4 — an OBS window-capture of a live Flow run (docs/RECORDING.md)",
+    notes:
+      "Long-form landscape. Intended for YouTube and as the source the other formats are cut from.",
+  },
+  {
+    id: "PromoSocial",
+    width: 1080,
+    height: 1920,
+    durationSec: 60,
+    shipped: false,
+    blockedOn: "public/master.mp4 — an OBS window-capture of a live Flow run (docs/RECORDING.md)",
+    notes:
+      "Vertical. Hook card verified rendering 2026-08-05 — type scales and holds at 9:16. NOTE: the montage LETTERBOXES the 16:9 master rather than reframing it (a CSS scale-to-cover crashes the render tab; see the comment in PromoSocial.tsx). Acceptable in a Facebook feed, weak for vertical-native TikTok/Shorts where letterboxed landscape reads as a repost.",
+  },
+  {
+    id: "ReadmeLoop",
+    width: 1280,
+    height: 720,
+    durationSec: 30,
+    shipped: false,
+    blockedOn: "public/master.mp4 — an OBS window-capture of a live Flow run (docs/RECORDING.md)",
+    notes:
+      "Seamless loop, GIF source. The two committed GIFs did NOT come from it — they are 600×338/15.0s and 800×450/16.7s against this composition's 1280×720/30s, so they were produced another way and cannot be re-rendered from here.",
+  },
+];
+
+/** Compositions that could ship an asset today, with no new capture. */
+export function readyToRender(): CompositionStatus[] {
+  return compositions.filter((c) => c.blockedOn === null);
+}
+
+/**
  * Formats NOT yet represented in the catalog, per aspect ratio.
  *
- * The gap this surfaces today: every catalogued asset is landscape. `PromoSocial`
- * (1080×1920) has been built since the pipeline shipped and has never produced a
- * committed asset — so any vertical-first channel (TikTok, Shorts, Facebook
- * mobile feed) currently has nothing to post.
+ * The gap this surfaces today: every catalogued asset is landscape, so any
+ * vertical-first channel (TikTok, Shorts, Facebook mobile feed) has nothing to
+ * post. `PromoSocial` is built and verified rendering — see `compositions`
+ * below for exactly what it is waiting on.
  */
 export function missingVertical(): boolean {
   return !catalog.some((a) => a.height > a.width);
