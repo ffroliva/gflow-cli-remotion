@@ -8,6 +8,7 @@ Routing layer for `gflow-cli-remotion`. Start here.
 | [AGENTS.md](../AGENTS.md) | Universal coding-agent spec — Cursor / Codex / Aider / Gemini CLI / etc. | Any AI agent enters the repo |
 | [CLAUDE.md](../CLAUDE.md) | Claude Code session protocol (delegates universal rules to AGENTS.md) | Claude Code opens the repo |
 | [SETUP.md](SETUP.md) | Operator runbook: OBS + promo profile setup, record → render → GIF, 5-layer verification ledger | Recording or rendering a promo |
+| [PROMO_STORY.md](PROMO_STORY.md) | **The story the promo tells** — three-beat narrative, shot list, and the exact commands to run during capture | Planning or running a capture session, or deciding what footage is actually needed |
 | [RECORDING.md](RECORDING.md) | How to capture the master (gflow headed browser generation + terminal); gdigrab vs OBS; auth | Capturing real footage for the promo |
 | [promo.css](promo.css) | Chrome user-stylesheet hiding the account chip | Setting up the promo profile |
 | [types/catalog.ts](../types/catalog.ts) | **Catalog of published promo assets** — what exists, what produced it, which channel it is live on | Planning a promo push, or checking whether material can be reused before commissioning a new recording |
