@@ -10,6 +10,7 @@ Routing layer for `gflow-cli-remotion`. Start here.
 | [SETUP.md](SETUP.md) | Operator runbook: OBS + promo profile setup, record → render → GIF, 5-layer verification ledger | Recording or rendering a promo |
 | [RECORDING.md](RECORDING.md) | How to capture the master (gflow headed browser generation + terminal); gdigrab vs OBS; auth | Capturing real footage for the promo |
 | [promo.css](promo.css) | Chrome user-stylesheet hiding the account chip | Setting up the promo profile |
+| [types/catalog.ts](../types/catalog.ts) | **Catalog of published promo assets** — what exists, what produced it, which channel it is live on | Planning a promo push, or checking whether material can be reused before commissioning a new recording |
 | [design spec](specs/2026-05-27-promo-pipeline-design.md) | Why the pipeline is shaped the way it is | You want architectural intent |
 | [implementation plan](superpowers/plans/2026-05-27-promo-pipeline.md) | Task-by-task build plan (with inline amendments) | Resuming or auditing the build |
 
